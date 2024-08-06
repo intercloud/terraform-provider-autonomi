@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/intercloud/terraform-provider-autonomi/external/products/models"
 )
 
 // HostURL - Default Catalog URL
@@ -73,10 +75,12 @@ func createFilter(cspName, provider, location, bandwidth string) string {
 	return strings.Join(filters, " AND ")
 }
 
-func (c *Client) GetCloudProducts() ([]cloudProduct, error) {
+func (c *Client) GetCloudProducts(filters models.Filters) ([]cloudProduct, error) {
+
+	filter := createFilter(filters.CSPName, filters.Provider, filters.Location, filters.Bandwidth)
 
 	payload := productDataSourceRequest{
-		Filter: `cspName = "AWS" AND provider = "EQUINIX" AND location = "EQUINIX LD5" AND bandwidth = "100"`,
+		Filter: filter,
 		Facets: []string{"cspName", "cspRegion", "cspCity", "location", "bandwidth", "provider"},
 	}
 

@@ -3,21 +3,15 @@ package provider
 import (
 	"context"
 	"fmt"
-	"terraform-provider-autonomi/external/products"
+
+	"github.com/intercloud/terraform-provider-autonomi/external/products"
+	"github.com/intercloud/terraform-provider-autonomi/external/products/models"
 
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 )
-
-// DatasourceFiltersModel describes the data source filters model.
-type DatasourceFiltersModel struct {
-	CSPName   types.String `tfsdk:"csp_name"`
-	Provider  types.String `tfsdk:"provider"`
-	Location  types.String `tfsdk:"location"`
-	Bandwidth types.String `tfsdk:"bandwidth"`
-}
 
 type cloudProductDataSource struct {
 	client *products.Client
@@ -39,7 +33,11 @@ type cloudProductDataSourceModel struct {
 }
 
 type productDataSourceModel struct {
-	Hits []cloudProductDataSourceModel `tfsdk:"hits"`
+	CSPName          types.String                  `tfsdk:"csp_name"`
+	UnderlayProvider types.String                  `tfsdk:"underlay_provider"`
+	Location         types.String                  `tfsdk:"location"`
+	Bandwidth        types.String                  `tfsdk:"bandwidth"`
+	Hits             []cloudProductDataSourceModel `tfsdk:"hits"`
 }
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -62,6 +60,22 @@ func (d *cloudProductDataSource) Metadata(_ context.Context, req datasource.Meta
 func (d *cloudProductDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"csp_name": schema.StringAttribute{
+				MarkdownDescription: "Name of the CSP expected values are [AWS, Azure, GCP]",
+				Optional:            true,
+			},
+			"underlay_provider": schema.StringAttribute{
+				MarkdownDescription: "Name of the Provider: expected values are [Equinix, Megaport]",
+				Optional:            true,
+			},
+			"location": schema.StringAttribute{
+				MarkdownDescription: "Name of the Location: expected values are [...]",
+				Optional:            true,
+			},
+			"bandwidth": schema.StringAttribute{
+				MarkdownDescription: "Name of the Provider: expected values are [50, 100, 110, 500, 1000, 5000, 10000]",
+				Optional:            true,
+			},
 			"hits": schema.ListNestedAttribute{
 				Computed: true,
 				NestedObject: schema.NestedAttributeObject{
@@ -109,10 +123,31 @@ func (d *cloudProductDataSource) Schema(_ context.Context, _ datasource.SchemaRe
 	}
 }
 
+// Configure adds the provider configured client to the data source.
+func (d *cloudProductDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+	// Add a nil check when handling ProviderData because Terraform
+	// sets that data after it calls the ConfigureProvider RPC.
+	if req.ProviderData == nil {
+		return
+	}
+
+	catalogClient, ok := req.ProviderData.(*products.Client)
+	if !ok {
+		resp.Diagnostics.AddError(
+			"Unexpected Data Source Configure Type",
+			fmt.Sprintf("Expected *catalog.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
+
+		return
+	}
+
+	d.client = catalogClient
+}
+
 // Read refreshes the Terraform state with the latest data.
 func (d *cloudProductDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 
-	var data DatasourceFiltersModel
+	var data productDataSourceModel
 
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
@@ -120,9 +155,16 @@ func (d *cloudProductDataSource) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 
+	filters := models.Filters{
+		CSPName:   data.CSPName.ValueString(),
+		Provider:  data.UnderlayProvider.ValueString(),
+		Location:  data.Location.ValueString(),
+		Bandwidth: data.Bandwidth.ValueString(),
+	}
+
 	var state productDataSourceModel
 
-	products, err := d.client.GetCloudProducts()
+	products, err := d.client.GetCloudProducts(filters)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to Read Autonomi Cloud Products",
@@ -156,25 +198,4 @@ func (d *cloudProductDataSource) Read(ctx context.Context, req datasource.ReadRe
 	if resp.Diagnostics.HasError() {
 		return
 	}
-}
-
-// Configure adds the provider configured client to the data source.
-func (d *cloudProductDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-	// Add a nil check when handling ProviderData because Terraform
-	// sets that data after it calls the ConfigureProvider RPC.
-	if req.ProviderData == nil {
-		return
-	}
-
-	catalogClient, ok := req.ProviderData.(*products.Client)
-	if !ok {
-		resp.Diagnostics.AddError(
-			"Unexpected Data Source Configure Type",
-			fmt.Sprintf("Expected *catalog.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
-		)
-
-		return
-	}
-
-	d.client = catalogClient
 }

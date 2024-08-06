@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/intercloud/terraform-provider-autonomi/external/products"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -105,18 +106,6 @@ func (p *autonomiProvider) Configure(ctx context.Context, req provider.Configure
 		return
 	}
 
-	// Create a new Autonomi client using the configuration values
-	client, err := autonomi.NewClient(personal_access_token, terms_and_conditions)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unable to Create Autonomi API Client",
-			"An unexpected error occurred when creating the Autonomi API client. "+
-				"If the error is not clear, please contact the provider developers.\n\n"+
-				"Autonomi Client Error: "+err.Error(),
-		)
-		return
-	}
-
 	// Create a new Catalog client using the configuration values
 	catalogClient, err := products.NewClient(personal_access_token)
 	if err != nil {
@@ -132,7 +121,6 @@ func (p *autonomiProvider) Configure(ctx context.Context, req provider.Configure
 	// Make the Autonomi client available during DataSource and Resource
 	// type Configure methods.
 	resp.DataSourceData = catalogClient
-	resp.ResourceData = client
 }
 
 // DataSources defines the data sources implemented in the provider.
@@ -144,8 +132,5 @@ func (p *autonomiProvider) DataSources(_ context.Context) []func() datasource.Da
 
 // Resources defines the resources implemented in the provider.
 func (p *autonomiProvider) Resources(_ context.Context) []func() resource.Resource {
-	return []func() resource.Resource{
-		NewWorkspaceResource,
-		NewCloudNodeResource,
-	}
+	return nil
 }
