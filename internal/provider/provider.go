@@ -2,8 +2,6 @@ package provider
 
 import (
 	"context"
-	"terraform-provider-autonomi/external/autonomi"
-	"terraform-provider-autonomi/external/products"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -27,7 +25,6 @@ type autonomiProvider struct {
 }
 
 type autonomiProviderModel struct {
-	Host               types.String `tfsdk:"host"`
 	TermsAndConditions types.Bool   `tfsdk:"terms_and_conditions"`
 	PAT                types.String `tfsdk:"personal_access_token"`
 }
@@ -51,15 +48,14 @@ func (p *autonomiProvider) Metadata(_ context.Context, _ provider.MetadataReques
 func (p *autonomiProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp *provider.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"host": schema.StringAttribute{
-				Required: true,
-			},
 			"terms_and_conditions": schema.BoolAttribute{
-				Required: true,
+				Required:    true,
+				Description: "A boolean variable indicating whether the terms and conditions have been accepted. Must be set to 'true' to run the provider",
 			},
 			"personal_access_token": schema.StringAttribute{
-				Required:  true,
-				Sensitive: true,
+				Required:    true,
+				Sensitive:   true,
+				Description: "The Personal Access Token (PAT) used to authenticate with the Autonomi API. This token can be obtained from the Autonomi service and is required to access and manage resources via the API.",
 			},
 		},
 	}

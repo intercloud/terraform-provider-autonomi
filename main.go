@@ -4,10 +4,14 @@ import (
 	"context"
 	"flag"
 	"log"
-	"terraform-provider-autonomi/internal/provider"
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
+	"github.com/intercloud/terraform-provider-autonomi/internal/provider"
 )
+
+// Run the docs generation tool, check its repository for more information on how it works and how docs
+// can be customized.
+//go:generate go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs generate -provider-name scaffolding
 
 var (
 	// these will be set by the goreleaser configuration
@@ -30,7 +34,7 @@ func main() {
 		// provider address is used in these tutorials in conjunction with a
 		// specific Terraform CLI configuration for manual development testing
 		// of this provider.
-		Address: "hashicorp.com/edu/autonomi",
+		Address: "hashicorp.com/intercloud/autonomi",
 		Debug:   debug,
 	}
 

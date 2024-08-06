@@ -12,9 +12,9 @@ const (
 	// such as updating the Makefile and running the testing through that tool.
 	providerConfig = `
 provider "autonomi" {
-  host = "https://api-platform-dev.intercloud.io/v1/"
+  host = "test_host"
   terms_and_conditions = true
-  personal_access_token = "pat-0cf534ba12a3f7fa6df09260b73c2380b23bb9af51cda42e9747b5c2d89c48ea"
+  personal_access_token = "test_pat"
 }
 `
 )
