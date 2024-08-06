@@ -12,6 +12,14 @@ provider "autonomi" {
   personal_access_token = var.pat_token
 }
 
+data "autonomi_cloud_products" "clouds" {
+  
+}
+
+output "autonomi_cloud_products" {
+  value = data.autonomi_cloud_products.clouds
+}
+
 resource "autonomi_workspace" "workspace" {
   name = "Workspace created with Terraform"
   description = "this is a description"
@@ -30,7 +38,7 @@ resource "autonomi_node" "node" {
     aws_account_id = var.aws_account_id
   }
   product = {
-    sku = "CEQULD5100AWS"
+    sku = data.autonomi_cloud_products.clouds.hits[0].sku
   }
 }
 

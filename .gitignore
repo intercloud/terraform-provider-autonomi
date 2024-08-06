@@ -1,3 +1,4 @@
 *.backup
 *.tfstate
 *.tfvars
+./examples/autonomi/main.tf

@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 // nodeResource is the resource implementation.
@@ -212,8 +211,6 @@ func (r *nodeResource) Create(ctx context.Context, req resource.CreateRequest, r
 }
 
 func (r *nodeResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-
-	tflog.Info(ctx, "=============>>>>>>>>>  WELCOME_TO_READ <<<<<<<<<<<=============")
 
 	// Get current state
 	var state nodeResourceModel

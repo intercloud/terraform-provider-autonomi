@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"terraform-provider-autonomi/external/autonomi"
+	"terraform-provider-autonomi/external/products"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -120,14 +121,29 @@ func (p *autonomiProvider) Configure(ctx context.Context, req provider.Configure
 		return
 	}
 
+	// Create a new Catalog client using the configuration values
+	catalogClient, err := products.NewClient(personal_access_token)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Unable to Create Catalog API Client",
+			"An unexpected error occurred when creating the Autonomi's catalog client. "+
+				"If the error is not clear, please contact the provider developers.\n\n"+
+				"Autonomi's Catalog Client Error: "+err.Error(),
+		)
+		return
+	}
+
 	// Make the Autonomi client available during DataSource and Resource
 	// type Configure methods.
+	resp.DataSourceData = catalogClient
 	resp.ResourceData = client
 }
 
 // DataSources defines the data sources implemented in the provider.
 func (p *autonomiProvider) DataSources(_ context.Context) []func() datasource.DataSource {
-	return nil
+	return []func() datasource.DataSource{
+		NewCloudProductDataSource,
+	}
 }
 
 // Resources defines the resources implemented in the provider.
