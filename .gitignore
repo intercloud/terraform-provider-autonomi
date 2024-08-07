@@ -26,4 +26,4 @@ go.work.sum
 *.tfvars
 *.tfstate
 
-.examples/autonomi/main.tf
+*.examples/autonomi/main.tf
