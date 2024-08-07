@@ -191,6 +191,54 @@ func (r *workspaceResource) Read(ctx context.Context, req resource.ReadRequest, 
 
 // Update updates the resource and sets the updated Terraform state on success.
 func (r *workspaceResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	// Retrieve values from plan
+	var plan workspaceResourceModel
+	diags := req.Plan.Get(ctx, &plan)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Generate API request body from plan
+	payload := models.UpdateWorkspace{
+		Name:        plan.Name.ValueString(),
+		Description: plan.Description.ValueString(),
+	}
+
+	// Update existing workspace
+	_, err := r.client.UpdateWorkspace(ctx, payload, plan.ID.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Updating Worksapce",
+			fmt.Sprintf("Could not update Autonomi workspace: "+plan.ID.ValueString())+": error: "+err.Error(),
+		)
+		return
+	}
+
+	// Fetch updated items from GetWorkspace as UpdateWorkspace items are not
+	// populated.
+	workspace, err := r.client.GetWorkspace(ctx, plan.ID.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Reading Autonomi Workspace",
+			fmt.Sprintf("Could not read Autonomi workspace: "+plan.ID.ValueString())+": error: "+err.Error(),
+		)
+		return
+	}
+
+	// Update resource state with updated items and timestamp
+	plan.ID = types.StringValue(workspace.ID.String())
+	plan.Name = types.StringValue(workspace.Name)
+	plan.Description = types.StringValue(workspace.Description)
+	plan.CreatedAt = types.StringValue(workspace.CreatedAt.String())
+	plan.UpdatedAt = types.StringValue(workspace.UpdatedAt.String())
+
+	diags = resp.State.Set(ctx, plan)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 }
 
 // Delete deletes the resource and removes the Terraform state on success.
