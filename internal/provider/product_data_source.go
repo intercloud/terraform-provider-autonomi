@@ -2,19 +2,21 @@ package provider
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
-	"github.com/intercloud/terraform-provider-autonomi/external/products"
 	"github.com/intercloud/terraform-provider-autonomi/external/products/models"
 
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+
+	"github.com/meilisearch/meilisearch-go"
 )
 
 type cloudProductDataSource struct {
-	client *products.Client
+	client *meilisearch.Client
 }
 
 type cloudProductDataSourceModel struct {
@@ -142,7 +144,7 @@ func (d *cloudProductDataSource) Configure(_ context.Context, req datasource.Con
 		return
 	}
 
-	catalogClient, ok := req.ProviderData.(*products.Client)
+	catalogClient, ok := req.ProviderData.(*meilisearch.Client)
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Data Source Configure Type",
@@ -173,9 +175,42 @@ func (d *cloudProductDataSource) Read(ctx context.Context, req datasource.ReadRe
 		Bandwidth: int(data.Bandwidth.ValueInt64()),
 	}
 
-	var state productDataSourceModel
+	// Create the filter string dynamically
+	var filterStrings []string
 
-	products, err := d.client.GetCloudProducts(filters)
+	if filters.CSPName != "" {
+		filterStrings = append(filterStrings, fmt.Sprintf("cspName = \"%s\"", filters.CSPName))
+	}
+	if filters.CSPCity != "" {
+		filterStrings = append(filterStrings, fmt.Sprintf("cspCity = \"%s\"", filters.CSPName))
+	}
+	if filters.CSPRegion != "" {
+		filterStrings = append(filterStrings, fmt.Sprintf("cspRegion = \"%s\"", filters.CSPName))
+	}
+	if filters.Provider != "" {
+		filterStrings = append(filterStrings, fmt.Sprintf("provider = \"%s\"", filters.Provider))
+	}
+	if filters.Location != "" {
+		filterStrings = append(filterStrings, fmt.Sprintf("location = \"%s\"", filters.Location))
+	}
+	if filters.Bandwidth != 0 {
+		filterStrings = append(filterStrings, fmt.Sprintf("bandwidth = %d", filters.Bandwidth))
+	}
+
+	// Define the search request
+	searchRequest := &meilisearch.SearchRequest{
+		Filter: filterStrings,
+		Facets: []string{
+			"cspName",
+			"cspRegion",
+			"cspCity",
+			"location",
+			"bandwidth",
+			"provider",
+		},
+	}
+
+	respProducts, err := d.client.Index("cloudproduct").Search("", searchRequest)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to Read Autonomi Cloud Products",
@@ -184,8 +219,29 @@ func (d *cloudProductDataSource) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 
+	cloudProducts := models.Products{}
+	productsJSON, err := json.Marshal(respProducts) // Marshal the hits to JSON
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Unable to Read Autonomi Cloud Products",
+			err.Error(),
+		)
+		return
+	}
+
+	err = json.Unmarshal(productsJSON, &cloudProducts) // Unmarshal JSON into the CloudProduct slice
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Unable to Read Autonomi Cloud Products",
+			err.Error(),
+		)
+		return
+	}
+
+	var state productDataSourceModel
+
 	// Map response body to model
-	for _, cp := range products.Hits {
+	for _, cp := range cloudProducts.Hits {
 		cloudProductState := cloudProductDataSourceModel{
 			ID:        types.Int64Value(int64(cp.ID)),
 			Provider:  types.StringValue(cp.Provider),
@@ -205,12 +261,12 @@ func (d *cloudProductDataSource) Read(ctx context.Context, req datasource.ReadRe
 
 	// Set the bandwidth map in the state
 	state.FacetDistribution = &facetDistributionDataSourceModel{
-		Bandwidth: products.FacetDistribution.Bandwidth,
-		CspCity:   products.FacetDistribution.CspCity,
-		CspName:   products.FacetDistribution.CspName,
-		CspRegion: products.FacetDistribution.CspRegion,
-		Location:  products.FacetDistribution.Location,
-		Provider:  products.FacetDistribution.Provider,
+		Bandwidth: cloudProducts.FacetDistribution.Bandwidth,
+		CspCity:   cloudProducts.FacetDistribution.CspCity,
+		CspName:   cloudProducts.FacetDistribution.CspName,
+		CspRegion: cloudProducts.FacetDistribution.CspRegion,
+		Location:  cloudProducts.FacetDistribution.Location,
+		Provider:  cloudProducts.FacetDistribution.Provider,
 	}
 
 	// Set state

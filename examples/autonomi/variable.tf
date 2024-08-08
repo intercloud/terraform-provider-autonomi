@@ -48,3 +48,15 @@ variable "location" {
     error_message = "The location value must be 'EQUINIX AM2', 'EQUINIX DC2', 'EQUINIX FR5', 'EQUINIX HK2', 'EQUINIX LD5', 'EQUINIX PA3', 'EQUINIX SG1', 'EQUINIX SV5'."
   }
 }
+
+variable "host_url" { // @TODO remove when it will be published
+  description = "The hostname or base URL of the API endpoint for the Autonomi service. This URL is used by the custom Terraform provider to interact with the Autonomi API."
+  type        = string
+  sensitive = true
+}
+
+variable "catalog_url" { // @TODO remove when it will be published
+  description = "The hostname or base URL of the API endpoint for the Autonomi's catampg service. This URL is used by the custom Terraform provider to interact with the Autonomi's catalog API."
+  type        = string
+  sensitive = true
+}
