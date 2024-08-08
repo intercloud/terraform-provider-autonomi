@@ -206,22 +206,11 @@ func (r *workspaceResource) Update(ctx context.Context, req resource.UpdateReque
 	}
 
 	// Update existing workspace
-	_, err := r.client.UpdateWorkspace(ctx, payload, plan.ID.ValueString())
+	workspace, err := r.client.UpdateWorkspace(ctx, payload, plan.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Updating Worksapce",
 			fmt.Sprintf("Could not update Autonomi workspace: "+plan.ID.ValueString())+": error: "+err.Error(),
-		)
-		return
-	}
-
-	// Fetch updated items from GetWorkspace as UpdateWorkspace items are not
-	// populated.
-	workspace, err := r.client.GetWorkspace(ctx, plan.ID.ValueString())
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error Reading Autonomi Workspace",
-			fmt.Sprintf("Could not read Autonomi workspace: "+plan.ID.ValueString())+": error: "+err.Error(),
 		)
 		return
 	}
