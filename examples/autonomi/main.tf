@@ -13,10 +13,10 @@ provider "autonomi" {
 
 
 data "autonomi_cloud_products" "clouds" {
-  csp_name = "AWS"
-  underlay_provider = "EQUINIX"
-  location = "EQUINIX LD5"
-  bandwidth = "100"
+  csp_name = var.csp_name
+  underlay_provider = var.underlay_provider
+  location = var.location
+  bandwidth = var.bandwidth
 }
 
 output "autonomi_cloud_products" {

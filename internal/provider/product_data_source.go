@@ -32,15 +32,26 @@ type cloudProductDataSourceModel struct {
 	CSPName   types.String  `tfsdk:"csp_name"`
 }
 
-type productDataSourceModel struct {
-	CSPName          types.String                  `tfsdk:"csp_name"`
-	UnderlayProvider types.String                  `tfsdk:"underlay_provider"`
-	Location         types.String                  `tfsdk:"location"`
-	Bandwidth        types.String                  `tfsdk:"bandwidth"`
-	Hits             []cloudProductDataSourceModel `tfsdk:"hits"`
+type facetDistributionDataSourceModel struct {
+	Bandwidth map[string]int `tfsdk:"bandwidth"`
+	CspCity   map[string]int `tfsdk:"csp_city"`
+	CspName   map[string]int `tfsdk:"csp_name"`
+	CspRegion map[string]int `tfsdk:"csp_region"`
+	Location  map[string]int `tfsdk:"location"`
+	Provider  map[string]int `tfsdk:"provider"`
 }
 
-// Ensure the implementation satisfies the expected interfaces.
+type productDataSourceModel struct {
+	CSPName           types.String                      `tfsdk:"csp_name"`
+	CspCity           types.String                      `tfsdk:"csp_city"`
+	CspRegion         types.String                      `tfsdk:"csp_region"`
+	UnderlayProvider  types.String                      `tfsdk:"underlay_provider"`
+	Location          types.String                      `tfsdk:"location"`
+	Bandwidth         types.Int64                       `tfsdk:"bandwidth"`
+	Hits              []cloudProductDataSourceModel     `tfsdk:"hits"`
+	FacetDistribution *facetDistributionDataSourceModel `tfsdk:"facet_distribution"`
+}
+
 // Ensure the implementation satisfies the expected interfaces.
 var (
 	_ datasource.DataSource              = &cloudProductDataSource{}
@@ -56,12 +67,25 @@ func (d *cloudProductDataSource) Metadata(_ context.Context, req datasource.Meta
 	resp.TypeName = req.ProviderTypeName + "_cloud_products"
 }
 
+var int64MapAttr = schema.MapAttribute{
+	ElementType: types.Int64Type,
+	Computed:    true,
+}
+
 // Schema defines the schema for the data source.
 func (d *cloudProductDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"csp_name": schema.StringAttribute{
 				MarkdownDescription: "Name of the CSP expected values are [AWS, Azure, GCP]",
+				Optional:            true,
+			},
+			"csp_city": schema.StringAttribute{
+				MarkdownDescription: "Name of the CSP city",
+				Optional:            true,
+			},
+			"csp_region": schema.StringAttribute{
+				MarkdownDescription: "Name of the CSP region",
 				Optional:            true,
 			},
 			"underlay_provider": schema.StringAttribute{
@@ -72,7 +96,7 @@ func (d *cloudProductDataSource) Schema(_ context.Context, _ datasource.SchemaRe
 				MarkdownDescription: "Name of the Location: expected values are [...]",
 				Optional:            true,
 			},
-			"bandwidth": schema.StringAttribute{
+			"bandwidth": schema.Int64Attribute{
 				MarkdownDescription: "Name of the Provider: expected values are [50, 100, 110, 500, 1000, 5000, 10000]",
 				Optional:            true,
 			},
@@ -80,43 +104,30 @@ func (d *cloudProductDataSource) Schema(_ context.Context, _ datasource.SchemaRe
 				Computed: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"id": schema.Int64Attribute{
-							Computed: true,
-						},
-						"provider": schema.StringAttribute{
-							Computed: true,
-						},
-						"duration": schema.Int64Attribute{
-							Computed: true,
-						},
-						"location": schema.StringAttribute{
-							Computed: true,
-						},
-						"bandwidth": schema.Int64Attribute{
-							Computed: true,
-						},
-						"date": schema.StringAttribute{
-							Computed: true,
-						},
-						"price_nrc": schema.Int64Attribute{
-							Computed: true,
-						},
-						"price_mrc": schema.Int64Attribute{
-							Computed: true,
-						},
-						"cost_nrc": schema.Int64Attribute{
-							Computed: true,
-						},
-						"cost_mrc": schema.Int64Attribute{
-							Computed: true,
-						},
-						"sku": schema.StringAttribute{
-							Computed: true,
-						},
-						"csp_name": schema.StringAttribute{
-							Computed: true,
-						},
+						"id":        schema.Int64Attribute{Computed: true},
+						"provider":  schema.StringAttribute{Computed: true},
+						"duration":  schema.Int64Attribute{Computed: true},
+						"location":  schema.StringAttribute{Computed: true},
+						"bandwidth": schema.Int64Attribute{Computed: true},
+						"date":      schema.StringAttribute{Computed: true},
+						"price_nrc": schema.Int64Attribute{Computed: true},
+						"price_mrc": schema.Int64Attribute{Computed: true},
+						"cost_nrc":  schema.Int64Attribute{Computed: true},
+						"cost_mrc":  schema.Int64Attribute{Computed: true},
+						"sku":       schema.StringAttribute{Computed: true},
+						"csp_name":  schema.StringAttribute{Computed: true},
 					},
+				},
+			},
+			"facet_distribution": schema.SingleNestedAttribute{
+				Computed: true,
+				Attributes: map[string]schema.Attribute{
+					"bandwidth":  int64MapAttr,
+					"csp_city":   int64MapAttr,
+					"csp_name":   int64MapAttr,
+					"csp_region": int64MapAttr,
+					"location":   int64MapAttr,
+					"provider":   int64MapAttr,
 				},
 			},
 		},
@@ -159,7 +170,7 @@ func (d *cloudProductDataSource) Read(ctx context.Context, req datasource.ReadRe
 		CSPName:   data.CSPName.ValueString(),
 		Provider:  data.UnderlayProvider.ValueString(),
 		Location:  data.Location.ValueString(),
-		Bandwidth: data.Bandwidth.ValueString(),
+		Bandwidth: int(data.Bandwidth.ValueInt64()),
 	}
 
 	var state productDataSourceModel
@@ -174,7 +185,7 @@ func (d *cloudProductDataSource) Read(ctx context.Context, req datasource.ReadRe
 	}
 
 	// Map response body to model
-	for _, cp := range products {
+	for _, cp := range products.Hits {
 		cloudProductState := cloudProductDataSourceModel{
 			ID:        types.Int64Value(int64(cp.ID)),
 			Provider:  types.StringValue(cp.Provider),
@@ -190,6 +201,16 @@ func (d *cloudProductDataSource) Read(ctx context.Context, req datasource.ReadRe
 			CSPName:   types.StringValue(cp.CSPName),
 		}
 		state.Hits = append(state.Hits, cloudProductState)
+	}
+
+	// Set the bandwidth map in the state
+	state.FacetDistribution = &facetDistributionDataSourceModel{
+		Bandwidth: products.FacetDistribution.Bandwidth,
+		CspCity:   products.FacetDistribution.CspCity,
+		CspName:   products.FacetDistribution.CspName,
+		CspRegion: products.FacetDistribution.CspRegion,
+		Location:  products.FacetDistribution.Location,
+		Provider:  products.FacetDistribution.Provider,
 	}
 
 	// Set state

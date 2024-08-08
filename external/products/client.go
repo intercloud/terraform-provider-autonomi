@@ -37,8 +37,18 @@ type cloudProduct struct {
 	CSPName   string `json:"cspName"`
 }
 
+type facetDistribution struct {
+	Bandwidth map[string]int `json:"bandwidth"`
+	CspCity   map[string]int `json:"cspCity"`
+	CspName   map[string]int `json:"cspName"`
+	CspRegion map[string]int `json:"cspRegion"`
+	Location  map[string]int `json:"location"`
+	Provider  map[string]int `json:"provider"`
+}
+
 type products struct {
-	Hits []cloudProduct `json:"hits"`
+	Hits              []cloudProduct    `json:"hits"`
+	FacetDistribution facetDistribution `json:"facetDistribution"`
 }
 
 type productDataSourceRequest struct {
@@ -56,7 +66,7 @@ func NewClient(personalAccessToken string) (*Client, error) {
 	return &c, nil
 }
 
-func createFilter(cspName, provider, location, bandwidth string) string {
+func createFilter(cspName, provider, location string, bandwidth int) string {
 	var filters []string
 
 	if cspName != "" {
@@ -68,14 +78,14 @@ func createFilter(cspName, provider, location, bandwidth string) string {
 	if location != "" {
 		filters = append(filters, fmt.Sprintf(`location = "%s"`, location))
 	}
-	if bandwidth != "" {
-		filters = append(filters, fmt.Sprintf(`bandwidth = "%s"`, bandwidth))
+	if bandwidth != 0 {
+		filters = append(filters, fmt.Sprintf(`bandwidth = "%d"`, bandwidth))
 	}
 
 	return strings.Join(filters, " AND ")
 }
 
-func (c *Client) GetCloudProducts(filters models.Filters) ([]cloudProduct, error) {
+func (c *Client) GetCloudProducts(filters models.Filters) (*products, error) {
 
 	filter := createFilter(filters.CSPName, filters.Provider, filters.Location, filters.Bandwidth)
 
@@ -106,7 +116,7 @@ func (c *Client) GetCloudProducts(filters models.Filters) ([]cloudProduct, error
 		return nil, err
 	}
 
-	return products.Hits, nil
+	return &products, nil
 }
 
 func (c *Client) doRequest(req *http.Request) ([]byte, error) {
