@@ -8,14 +8,7 @@ description: |-
 
 # autonomi_workspace (Resource)
 
-## Example Usage
 
-```terraform
-resource "autonomi_workspace" {
-  name = "Workspace Name"
-  description = "this is a description"
-}
-```
 
 
 
@@ -34,5 +27,5 @@ resource "autonomi_workspace" {
 
 - `account_id` (String) Account ID of the workspace, is determined by the personal access token
 - `created_at` (String) Creation date of the workspace
-- `id` (String) ID of the workspace, is set after creation
+- `id` (String) ID of the workspace, set after creation
 - `updated_at` (String) Update date of the workspace

@@ -121,8 +121,8 @@ github.com/hashicorp/terraform-svchost v0.1.1 h1:EZZimZ1GxdqFRinZ1tpJwVxxt49xc/S
 github.com/hashicorp/terraform-svchost v0.1.1/go.mod h1:mNsjQfZyf/Jhz35v6/0LWcv26+X7JPS+buii2c9/ctc=
 github.com/hashicorp/yamux v0.1.1 h1:yrQxtgseBDrq9Y652vSRDvsKCJKOUD+GzTS4Y0Y8pvE=
 github.com/hashicorp/yamux v0.1.1/go.mod h1:CtWFDAQgb7dxtzFs4tWbplKIe2jSi3+5vKbgIO0SLnQ=
-github.com/intercloud/autonomi-sdk v0.0.1 h1:JZQjvP+rnjpMKAZJv5ggllgHolq05b9/HsBtOwpkM5A=
-github.com/intercloud/autonomi-sdk v0.0.1/go.mod h1:gNMfu9OLe6y8GrGNsycESwifr8f+EBAS8NTHcNpQB9w=
+github.com/intercloud/autonomi-sdk v0.0.3 h1:3Dd3oOm89B8R/8h4QB1dM4sz96uJOIxzNrq+005uSbQ=
+github.com/intercloud/autonomi-sdk v0.0.3/go.mod h1:O0r2AhNEPkT5bsDByewDbpc6rojBNJG5EpGJpfp+Kxw=
 github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 h1:BQSFePA1RWJOlocH6Fxy8MmwDt+yVQYULKfN0RoTN8A=
 github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99/go.mod h1:1lJo3i6rXxKeerYnT8Nvf0QmHCRC1n8sfWVwXF2Frvo=
 github.com/jhump/protoreflect v1.15.1 h1:HUMERORf3I3ZdX05WaQ6MIpd/NJ434hTp5YiKgfCL6c=
