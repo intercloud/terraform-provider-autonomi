@@ -103,7 +103,8 @@ func (d *cloudProductDataSource) Schema(_ context.Context, _ datasource.SchemaRe
 				Optional:            true,
 			},
 			"hits": schema.ListNestedAttribute{
-				Computed: true,
+				MarkdownDescription: "The **hits** attribute contains the list of cloud products returned by the Meilisearch query. Each hit represents a cloud product that matches the specified search criteria.",
+				Computed:            true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"id":        schema.Int64Attribute{Computed: true},
@@ -122,7 +123,8 @@ func (d *cloudProductDataSource) Schema(_ context.Context, _ datasource.SchemaRe
 				},
 			},
 			"facet_distribution": schema.SingleNestedAttribute{
-				Computed: true,
+				MarkdownDescription: "The **facet_distribution** attribute provides an overview of the distribution of various facets within the cloud products returned by the Meilisearch query. This attribute allows you to analyze the frequency of different categories or attributes in the search results.",
+				Computed:            true,
 				Attributes: map[string]schema.Attribute{
 					"bandwidth":  int64MapAttr,
 					"csp_city":   int64MapAttr,
