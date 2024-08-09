@@ -40,3 +40,4 @@ jobs:
           go-version: $GO_VERSION
       - name: Run go mod tidy
         run: go mod tidy
+
