@@ -135,7 +135,13 @@ func (p *autonomiProvider) Configure(ctx context.Context, req provider.Configure
 		)
 	}
 	hostURL, err := url.Parse(host_url)
-	if resp.Diagnostics.HasError() {
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Unable to parse host URL",
+			"An unexpected error occurred when parsing host url "+
+				"If the error is not clear, please contact the provider developers.\n\n"+
+				"Autonomi Client Error: "+err.Error(),
+		)
 		return
 	}
 	if catalog_url == "" {
@@ -201,5 +207,6 @@ func (p *autonomiProvider) DataSources(_ context.Context) []func() datasource.Da
 func (p *autonomiProvider) Resources(_ context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		NewWorkspaceResource,
+		NewCloudNodeResource,
 	}
 }
