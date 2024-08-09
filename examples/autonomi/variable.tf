@@ -19,6 +19,15 @@ variable "csp_name" {
   }
 }
 
+variable "csp_city" {
+  description = "The Cloud Service Provider City"
+  type        = string
+}
+
+variable "csp_region" {
+  description = "The Cloud Service Provider Region"
+  type        = string
+}
 variable "underlay_provider" {
   description = "The Underlay Service Provider Name"
   type        = string
