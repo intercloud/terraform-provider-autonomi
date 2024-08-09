@@ -12,8 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-
 	autonomisdk "github.com/intercloud/autonomi-sdk"
+	"github.com/meilisearch/meilisearch-go"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -32,7 +32,8 @@ type autonomiProvider struct {
 type autonomiProviderModel struct {
 	TermsAndConditions types.Bool   `tfsdk:"terms_and_conditions"`
 	PAT                types.String `tfsdk:"personal_access_token"`
-	HostURL            types.String `tfsdk:"host_url"` // @TODO remove when it will be published
+	HostURL            types.String `tfsdk:"host_url"`    // @TODO remove when it will be published
+	CatalogURL         types.String `tfsdk:"catalog_url"` // @TODO remove when it will be published
 }
 
 // New is a helper function to simplify provider server and testing implementation.
@@ -70,6 +71,11 @@ func (p *autonomiProvider) Schema(_ context.Context, _ provider.SchemaRequest, r
 				Sensitive:   true,
 				Description: "The host url to interact with autonomi API",
 			},
+			"catalog_url": schema.StringAttribute{
+				Required:    true,
+				Sensitive:   true,
+				Description: "The url to interact with autonomi's catalog",
+			},
 		},
 	}
 }
@@ -88,7 +94,7 @@ func (p *autonomiProvider) Configure(ctx context.Context, req provider.Configure
 	// with Terraform configuration value if set.
 	var terms_and_conditions bool
 	var personal_access_token string
-	var host_url string
+	var host_url, catalog_url string
 	if !config.TermsAndConditions.IsNull() {
 		terms_and_conditions = config.TermsAndConditions.ValueBool()
 	}
@@ -97,6 +103,9 @@ func (p *autonomiProvider) Configure(ctx context.Context, req provider.Configure
 	}
 	if !config.HostURL.IsNull() {
 		host_url = config.HostURL.ValueString()
+	}
+	if !config.CatalogURL.IsNull() {
+		catalog_url = config.CatalogURL.ValueString()
 	}
 
 	// If any of the expected configurations are missing, return
@@ -129,7 +138,31 @@ func (p *autonomiProvider) Configure(ctx context.Context, req provider.Configure
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	if catalog_url == "" {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("catalog_url"),
+			"Empty Catalog URL",
+			"The provider cannot create the Autonomi API client because the host url is not set."+
+				"Please explicitly set the host_url value in your Terraform configuration or use the HOST_URL environment variable to provide the token.",
+		)
+	}
 
+	// Create a new Catalog client using the configuration values
+	catalogClient := meilisearch.NewClient(meilisearch.ClientConfig{
+		Host:   catalog_url,
+		APIKey: personal_access_token,
+	})
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Unable to Create Catalog API Client",
+			"An unexpected error occurred when creating the Autonomi's catalog client. "+
+				"If the error is not clear, please contact the provider developers.\n\n"+
+				"Autonomi's Catalog Client Error: "+err.Error(),
+		)
+		return
+	}
+
+	// Create a Autonomi client using the configuration values
 	client, err := autonomisdk.NewClient(terms_and_conditions,
 		autonomisdk.WithHTTPClient(&http.Client{
 			Transport: &http.Transport{
@@ -141,7 +174,6 @@ func (p *autonomiProvider) Configure(ctx context.Context, req provider.Configure
 		autonomisdk.WithHostURL(hostURL),
 		autonomisdk.WithPersonalAccessToken(personal_access_token),
 	)
-
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to Create Autonomi API Client",
@@ -154,12 +186,15 @@ func (p *autonomiProvider) Configure(ctx context.Context, req provider.Configure
 
 	// Make the Autonomi client available during DataSource and Resource
 	// type Configure methods.
+	resp.DataSourceData = catalogClient
 	resp.ResourceData = client
 }
 
 // DataSources defines the data sources implemented in the provider.
 func (p *autonomiProvider) DataSources(_ context.Context) []func() datasource.DataSource {
-	return nil
+	return []func() datasource.DataSource{
+		NewCloudProductDataSource,
+	}
 }
 
 // Resources defines the resources implemented in the provider.
