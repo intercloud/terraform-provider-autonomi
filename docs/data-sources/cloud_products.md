@@ -33,8 +33,11 @@ data "autonomi_cloud_products" "clouds" {
 
 ### Read-Only
 
-- `facet_distribution` (Attributes) The **facet_distribution** attribute provides an overview of the distribution of various facets within the cloud products returned by the Meilisearch query. This attribute allows you to analyze the frequency of different categories or attributes in the search results. (see [below for nested schema](#nestedatt--facet_distribution))
-- `hits` (Attributes List) The **hits** attribute contains the list of cloud products returned by the Meilisearch query. Each hit represents a cloud product that matches the specified search criteria. (see [below for nested schema](#nestedatt--hits))
+- `facet_distribution` (Attributes) The **facet_distribution** attribute provides an overview of the distribution of
+   various facets within the cloud products returned by the Meilisearch query. This attribute allows you to analyze the
+   frequency of different categories or attributes in the search results. (see [below for nested schema](#nestedatt--facet_distribution))
+- `hits` (Attributes List) The **hits** attribute contains the list of cloud products returned by the Meilisearch query.
+   Each hit represents a cloud product that matches the specified search criteria. (see [below for nested schema](#nestedatt--hits))
 
 <a id="nestedatt--facet_distribution"></a>
 ### Nested Schema for `facet_distribution`
@@ -47,7 +50,6 @@ Read-Only:
 - `csp_region` (Map of Number)
 - `location` (Map of Number)
 - `provider` (Map of Number)
-
 
 <a id="nestedatt--hits"></a>
 ### Nested Schema for `hits`
