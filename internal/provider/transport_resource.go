@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
@@ -21,23 +22,22 @@ type transportResource struct {
 	client *autonomisdk.Client
 }
 
-type transportVlans struct {
-	AVlan types.Int64 `tfsdk:"a_vlan"`
-	ZVlan types.Int64 `tfsdk:"z_vlan"`
+var transportVlans = map[string]attr.Type{
+	"a_vlan": types.Int64Type,
+	"z_vlan": types.Int64Type,
 }
 
 type transportResourceModel struct {
-	ID          types.String `tfsdk:"id"`
-	WorkspaceID types.String `tfsdk:"workspace_id"`
-	CreatedAt   types.String `tfsdk:"created_at"`
-	UpdatedAt   types.String `tfsdk:"updated_at"`
-	DeployedAt  types.String `tfsdk:"deployed_at"`
-	Name        types.String `tfsdk:"name"`
-	State       types.String `tfsdk:"administrative_state"`
-	Product     product      `tfsdk:"product"`
-	// Vlans       types.ObjectValue `tfsdk:"vlans"`
-	Vlans        *transportVlans `tfsdk:"vlans"`
-	ConnectionID types.String    `tfsdk:"connection_id"`
+	ID           types.String `tfsdk:"id"`
+	WorkspaceID  types.String `tfsdk:"workspace_id"`
+	CreatedAt    types.String `tfsdk:"created_at"`
+	UpdatedAt    types.String `tfsdk:"updated_at"`
+	DeployedAt   types.String `tfsdk:"deployed_at"`
+	Name         types.String `tfsdk:"name"`
+	State        types.String `tfsdk:"administrative_state"`
+	Product      product      `tfsdk:"product"`
+	Vlans        types.Object `tfsdk:"vlans"`
+	ConnectionID types.String `tfsdk:"connection_id"`
 }
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -228,9 +228,21 @@ func (r *transportResource) Create(ctx context.Context, req resource.CreateReque
 		plan.DeployedAt = types.StringValue(transport.DeployedAt.String())
 	}
 	plan.ConnectionID = types.StringValue(transport.ConnectionID)
-	plan.Vlans = &transportVlans{
-		AVlan: types.Int64Value(transport.TransportVlans.AVlan),
-		ZVlan: types.Int64Value(transport.TransportVlans.ZVlan),
+
+	// set trnasportVlans object
+	vlansObject, diag := types.ObjectValue(
+		transportVlans,
+		map[string]attr.Value{
+			"a_vlan": types.Int64Value(transport.TransportVlans.AVlan),
+			"z_vlan": types.Int64Value(transport.TransportVlans.ZVlan),
+		},
+	)
+	plan.Vlans = vlansObject
+
+	// Check for errors
+	if diag.HasError() {
+		resp.Diagnostics.Append(diag...)
+		return
 	}
 
 	// Set state to fully populated data
