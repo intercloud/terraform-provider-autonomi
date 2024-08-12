@@ -41,17 +41,15 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
-      - name: Set up git to download intercloud private modules
-        run: git config --global url."https://${{ secrets.ORG_GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
-      - name: Print git config
-        run: git config --get-regexp url
-        continue-on-error: true
-      - name: Run go mod tidy
-        run: go mod tidy
-
+      - name: go mod tidy
+        uses: ./.github/actions/go-mod-tidy
+        with:
+          ORG_GITHUB_TOKEN: ${{ secrets.ORG_GITHUB_TOKEN }}
 
   golangci-lint:
     runs-on: ubuntu-latest
+    needs:
+      - go-mod-tidy
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -67,6 +65,8 @@ jobs:
 
   go-test:
     runs-on: ubuntu-latest
+    needs:
+      - go-mod-tidy
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
