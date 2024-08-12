@@ -10,5 +10,7 @@ runs:
   steps:
     - name: Set up git to download intercloud private modules
       run: git config --global url."https://${{ inputs.ORG_GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
+      shell: bash
     - name: Run go mod tidy
       run: go mod tidy
+      shell: bash
