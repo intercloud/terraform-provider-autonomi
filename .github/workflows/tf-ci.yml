@@ -26,11 +26,11 @@ jobs:
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: ${{ env.TF_VERSION }}
-      - name: change working directory
-        run: cd ${{ env.TF_MODULE_PATH }}
       - name: terraform init
+        working-directory: ${{ env.TF_MODULE_PATH }}
         run: terraform init
       - name: terraform validate
+        working-directory: ${{ env.TF_MODULE_PATH }}
         run: terraform validate
 
   tf-plan:
@@ -44,9 +44,6 @@ jobs:
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: ${{ env.TF_VERSION }}
-      - name: change working directory
-        run: cd ${{ env.TF_MODULE_PATH }}
-#      - name: terraform init
-#        run: terraform init
       - name: terraform plan
+        working-directory: ${{ env.TF_MODULE_PATH }}
         run: terraform plan
