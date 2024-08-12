@@ -34,24 +34,24 @@ type cloudProductDataSourceModel struct {
 	CSPName   types.String  `tfsdk:"csp_name"`
 }
 
-type facetDistributionDataSourceModel struct {
+type cloudFacetDistributionDataSourceModel struct {
 	Bandwidth map[string]int `tfsdk:"bandwidth"`
-	CspCity   map[string]int `tfsdk:"csp_city"`
-	CspName   map[string]int `tfsdk:"csp_name"`
-	CspRegion map[string]int `tfsdk:"csp_region"`
+	CSPCity   map[string]int `tfsdk:"csp_city"`
+	CSPName   map[string]int `tfsdk:"csp_name"`
+	CSPRegion map[string]int `tfsdk:"csp_region"`
 	Location  map[string]int `tfsdk:"location"`
 	Provider  map[string]int `tfsdk:"provider"`
 }
 
-type productDataSourceModel struct {
-	CSPName           types.String                      `tfsdk:"csp_name"`
-	CspCity           types.String                      `tfsdk:"csp_city"`
-	CspRegion         types.String                      `tfsdk:"csp_region"`
-	UnderlayProvider  types.String                      `tfsdk:"underlay_provider"`
-	Location          types.String                      `tfsdk:"location"`
-	Bandwidth         types.Int64                       `tfsdk:"bandwidth"`
-	Hits              []cloudProductDataSourceModel     `tfsdk:"hits"`
-	FacetDistribution *facetDistributionDataSourceModel `tfsdk:"facet_distribution"`
+type cloudsProductDataSourceModel struct {
+	CSPName           types.String                           `tfsdk:"csp_name"`
+	CSPCity           types.String                           `tfsdk:"csp_city"`
+	CSPRegion         types.String                           `tfsdk:"csp_region"`
+	UnderlayProvider  types.String                           `tfsdk:"underlay_provider"`
+	Location          types.String                           `tfsdk:"location"`
+	Bandwidth         types.Int64                            `tfsdk:"bandwidth"`
+	Hits              []cloudProductDataSourceModel          `tfsdk:"hits"`
+	FacetDistribution *cloudFacetDistributionDataSourceModel `tfsdk:"facet_distribution"`
 }
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -162,7 +162,7 @@ func (d *cloudProductDataSource) Configure(_ context.Context, req datasource.Con
 // Read refreshes the Terraform state with the latest data.
 func (d *cloudProductDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 
-	var data productDataSourceModel
+	var data cloudsProductDataSourceModel
 
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
@@ -170,7 +170,7 @@ func (d *cloudProductDataSource) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 
-	filters := models.Filters{
+	filters := models.CloudFilters{
 		CSPName:   data.CSPName.ValueString(),
 		Provider:  data.UnderlayProvider.ValueString(),
 		Location:  data.Location.ValueString(),
@@ -221,7 +221,7 @@ func (d *cloudProductDataSource) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 
-	cloudProducts := models.Products{}
+	cloudProducts := models.CloudProducts{}
 	productsJSON, err := json.Marshal(respProducts) // Marshal the hits to JSON
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -240,7 +240,7 @@ func (d *cloudProductDataSource) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 
-	var state productDataSourceModel
+	var state cloudsProductDataSourceModel
 
 	// Map response body to model
 	for _, cp := range cloudProducts.Hits {
@@ -262,11 +262,11 @@ func (d *cloudProductDataSource) Read(ctx context.Context, req datasource.ReadRe
 	}
 
 	// Set the bandwidth map in the state
-	state.FacetDistribution = &facetDistributionDataSourceModel{
+	state.FacetDistribution = &cloudFacetDistributionDataSourceModel{
 		Bandwidth: cloudProducts.FacetDistribution.Bandwidth,
-		CspCity:   cloudProducts.FacetDistribution.CspCity,
-		CspName:   cloudProducts.FacetDistribution.CspName,
-		CspRegion: cloudProducts.FacetDistribution.CspRegion,
+		CSPCity:   cloudProducts.FacetDistribution.CSPCity,
+		CSPName:   cloudProducts.FacetDistribution.CSPName,
+		CSPRegion: cloudProducts.FacetDistribution.CSPRegion,
 		Location:  cloudProducts.FacetDistribution.Location,
 		Provider:  cloudProducts.FacetDistribution.Provider,
 	}

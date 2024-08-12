@@ -158,15 +158,6 @@ func (p *autonomiProvider) Configure(ctx context.Context, req provider.Configure
 		Host:   catalog_url,
 		APIKey: personal_access_token,
 	})
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unable to Create Catalog API Client",
-			"An unexpected error occurred when creating the Autonomi's catalog client. "+
-				"If the error is not clear, please contact the provider developers.\n\n"+
-				"Autonomi's Catalog Client Error: "+err.Error(),
-		)
-		return
-	}
 
 	// Create a Autonomi client using the configuration values
 	client, err := autonomisdk.NewClient(terms_and_conditions,
@@ -200,6 +191,7 @@ func (p *autonomiProvider) Configure(ctx context.Context, req provider.Configure
 func (p *autonomiProvider) DataSources(_ context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
 		NewCloudProductDataSource,
+		NewTransportProductDataSource,
 	}
 }
 
