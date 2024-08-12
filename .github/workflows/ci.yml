@@ -42,7 +42,7 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
       - name: Set up git to download intercloud private modules
-        run: git config --global url."https://${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
+        run: git config --global url."https://${{ secrets.ORG_GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
       - name: Print git config
         run: git config --get-regexp url
         continue-on-error: true
