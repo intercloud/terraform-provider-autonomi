@@ -1,5 +1,5 @@
-name: go mod tidy
-description: set up gitconfig with an org PAT and run go mod tidy
+name: setup gitconfig
+description: set up gitconfig with an org PAT to clone private repos
 inputs:
   ORG_GITHUB_TOKEN:
     description: 'organizational personal access token with read private repositories permission'
@@ -8,9 +8,6 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Set up git to download intercloud private modules
+    - name: Set up gitconfig to clone github private repositories
       run: git config --global url."https://${{ inputs.ORG_GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
-      shell: bash
-    - name: Run go mod tidy
-      run: go mod tidy
       shell: bash
