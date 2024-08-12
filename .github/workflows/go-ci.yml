@@ -21,31 +21,31 @@ jobs:
   markdown-lint:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: checkout code
         uses: actions/checkout@v4
-      - name: Set up Node
+      - name: set up Node
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-      - name: Install markdownlint-cli
+      - name: install markdownlint-cli
         run: npm install -g markdownlint-cli
-      - name: Run markdownlint
+      - name: markdownlint
         run: markdownlint '**/*.md'
 
   go-mod-tidy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: checkout code
         uses: actions/checkout@v4
-      - name: Set up Go
+      - name: set up Go
         uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
-      - name: Set up gitconfig
+      - name: set up gitconfig
         uses: ./.github/actions/setup-gitconfig
         with:
           ORG_GITHUB_TOKEN: ${{ secrets.ORG_GITHUB_TOKEN }}
-      - name: Run go mod tidy
+      - name: go mod tidy
         run: go mod tidy
 
   golangci-lint:
@@ -53,9 +53,9 @@ jobs:
     needs:
       - go-mod-tidy
     steps:
-      - name: Checkout code
+      - name: checkout code
         uses: actions/checkout@v4
-      - name: Set up Go
+      - name: set up Go
         uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
@@ -70,11 +70,11 @@ jobs:
     needs:
       - go-mod-tidy
     steps:
-      - name: Checkout code
+      - name: checkout code
         uses: actions/checkout@v4
-      - name: Set up Go
+      - name: set up Go
         uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
-      - name: Run tests
+      - name: go test
         run: go test ./... -v
