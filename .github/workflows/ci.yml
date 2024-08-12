@@ -5,7 +5,7 @@ on:
     branches:
       - feat/**
       - fix/**
-      - hotfix/**'
+      - hotfix/**
       - main
   push:
     branches:
@@ -24,7 +24,7 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v2
         with:
-          node-version: '22.6.0'
+          node-version: ${{ env.NODE_VERSION }}
       - name: Install markdownlint-cli
         run: npm install -g markdownlint-cli
       - name: Run markdownlint
@@ -38,7 +38,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
-          go-version: $GO_VERSION
+          go-version: ${{ env.GO_VERSION }}
       - name: Run go mod tidy
         run: go mod tidy
 
@@ -50,7 +50,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
-          go-version: $GO_VERSION
+          go-version: ${{ env.GO_VERSION }}
       - name: Install go-tools
         run: go install honnef.co/go/tools/cmd/staticcheck@latest
       - name: Run go-tools
@@ -64,6 +64,6 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
-          go-version: $GO_VERSION
+          go-version: ${{ env.GO_VERSION }}
       - name: Run tests
         run: go test ./... -v
