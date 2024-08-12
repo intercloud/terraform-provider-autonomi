@@ -6,7 +6,6 @@ on:
       - feat/**
       - fix/**
       - hotfix/**'
-      - main
   push:
     branches:
       - main
@@ -24,7 +23,7 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v2
         with:
-          node-version: $NODE_VERSION
+          node-version: '22.6.0'
       - name: Install markdownlint-cli
         run: npm install -g markdownlint-cli
       - name: Run markdownlint
