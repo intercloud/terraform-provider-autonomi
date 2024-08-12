@@ -15,6 +15,7 @@ env:
   NODE_VERSION: 22.6.0
   GO_VERSION: v1.22.0
   GOLANGCI_LINT_VERSION: v1.59
+  GOPRIVATE: github.com/intercloud
 
 jobs:
   markdown-lint:
@@ -40,6 +41,11 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
+      - name: Set up git to download intercloud private modules
+        run: git config --global url."https://${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
+      - name: Print git config
+        run: git config --get-regexp url
+        continue-on-error: true
       - name: Run go mod tidy
         run: go mod tidy
 
