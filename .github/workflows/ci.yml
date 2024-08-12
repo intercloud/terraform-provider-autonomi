@@ -49,6 +49,7 @@ jobs:
       - name: Run go mod tidy
         run: go mod tidy
 
+
   golangci-lint:
     runs-on: ubuntu-latest
     steps:
