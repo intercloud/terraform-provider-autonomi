@@ -6,6 +6,7 @@ on:
       - feat/**
       - fix/**
       - hotfix/**'
+      - main
   push:
     branches:
       - main
