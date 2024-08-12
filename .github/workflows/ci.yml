@@ -11,7 +11,7 @@ on:
       - main
 
 env:
-  NODE_VERSION: 14
+  NODE_VERSION: 22.6.0
   GO_VERSION: 1.22.0
 
 jobs:
