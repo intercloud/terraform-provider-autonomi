@@ -38,6 +38,7 @@ type cloudNodeResourceModel struct {
 	WorkspaceID    types.String        `tfsdk:"workspace_id"`
 	CreatedAt      types.String        `tfsdk:"created_at"`
 	UpdatedAt      types.String        `tfsdk:"updated_at"`
+	DeployedAt     types.String        `tfsdk:"deployed_at"`
 	Name           types.String        `tfsdk:"name"`
 	State          types.String        `tfsdk:"administrative_state"`
 	Type           types.String        `tfsdk:"type"`
@@ -103,6 +104,10 @@ func (r *cloudNodeResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 			},
 			"updated_at": schema.StringAttribute{
 				MarkdownDescription: "Update date of the cloud node",
+				Computed:            true,
+			},
+			"deployed_at": schema.StringAttribute{
+				MarkdownDescription: "Deployment date of the cloud node",
 				Computed:            true,
 			},
 			"workspace_id": schema.StringAttribute{
@@ -330,7 +335,7 @@ func (r *cloudNodeResource) Update(ctx context.Context, req resource.UpdateReque
 	}
 
 	// Generate API request body from plan
-	payload := models.UpdateNode{
+	payload := models.UpdateElement{
 		Name: plan.Name.ValueString(),
 	}
 
@@ -349,6 +354,9 @@ func (r *cloudNodeResource) Update(ctx context.Context, req resource.UpdateReque
 	plan.Name = types.StringValue(node.Name)
 	plan.CreatedAt = types.StringValue(node.CreatedAt.String())
 	plan.UpdatedAt = types.StringValue(node.UpdatedAt.String())
+	if node.DeployedAt != nil {
+		plan.DeployedAt = types.StringValue(node.DeployedAt.String())
+	}
 	plan.State = types.StringValue(node.State.String())
 	plan.Type = types.StringValue(node.Type.String())
 	plan.Product = product{
