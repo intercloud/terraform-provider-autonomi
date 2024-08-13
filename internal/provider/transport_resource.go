@@ -46,7 +46,7 @@ var (
 	_ resource.ResourceWithConfigure = &transportResource{}
 )
 
-// NewCloudNodeResource is a helper function to simplify the provider implementation.
+// NewTransportResource is a helper function to simplify the provider implementation.
 func NewTransportResource() resource.Resource {
 	return &transportResource{}
 }
