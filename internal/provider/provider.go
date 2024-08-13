@@ -191,6 +191,7 @@ func (p *autonomiProvider) Configure(ctx context.Context, req provider.Configure
 func (p *autonomiProvider) DataSources(_ context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
 		NewCloudProductDataSource,
+		NewTransportProductDataSource,
 	}
 }
 

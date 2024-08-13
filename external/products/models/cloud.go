@@ -1,6 +1,6 @@
 package models
 
-type Filters struct {
+type CloudFilters struct {
 	CSPName   string
 	CSPRegion string
 	CSPCity   string
@@ -24,16 +24,16 @@ type CloudProduct struct {
 	CSPName   string `json:"cspName"`
 }
 
-type FacetDistribution struct {
+type CloudFacetDistribution struct {
 	Bandwidth map[string]int `json:"bandwidth"`
-	CspCity   map[string]int `json:"cspCity"`
-	CspName   map[string]int `json:"cspName"`
-	CspRegion map[string]int `json:"cspRegion"`
+	CSPCity   map[string]int `json:"cspCity"`
+	CSPName   map[string]int `json:"cspName"`
+	CSPRegion map[string]int `json:"cspRegion"`
 	Location  map[string]int `json:"location"`
 	Provider  map[string]int `json:"provider"`
 }
 
-type Products struct {
-	Hits              []CloudProduct    `json:"hits"`
-	FacetDistribution FacetDistribution `json:"facetDistribution"`
+type CloudProducts struct {
+	Hits              []CloudProduct         `json:"hits"`
+	FacetDistribution CloudFacetDistribution `json:"facetDistribution"`
 }
