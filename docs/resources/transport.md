@@ -47,7 +47,6 @@ Required:
 
 - `sku` (String) ID of the product
 
-
 <a id="nestedatt--vlans"></a>
 ### Nested Schema for `vlans`
 
