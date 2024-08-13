@@ -29,7 +29,7 @@ data "autonomi_cloud_products" "clouds" {
 
 ### Read-Only
 
-- `facet_distribution` (Attributes) The **facet_distribution** attribute provides an overview of the distribution of 
+- `facet_distribution` (Attributes) The **facet_distribution** attribute provides an overview of the distribution of
 various facets within the transport products returned by the Meilisearch query. This attribute allows you to analyze
 the frequency of different categories or attributes in the search results. (see [below for nested schema](#nestedatt--facet_distribution))
 - `hits` (Attributes List) The **hits** attribute contains the list of transport products returned by the Meilisearch
@@ -45,7 +45,6 @@ Read-Only:
 - `location` (Map of Number)
 - `location_to` (Map of Number)
 - `provider` (Map of Number)
-
 
 <a id="nestedatt--hits"></a>
 ### Nested Schema for `hits`
