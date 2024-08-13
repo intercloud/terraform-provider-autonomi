@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -311,4 +312,49 @@ func (r *transportResource) Update(ctx context.Context, req resource.UpdateReque
 }
 
 func (r *transportResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	// Retrieve values from state
+	var state transportResourceModel
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Delete existing node
+	_, err := r.client.DeleteTransport(ctx, state.WorkspaceID.ValueString(), state.ID.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Deleting transport",
+			"Could not delete transport, unexpected error: "+err.Error(),
+		)
+		return
+	}
+
+	// Poll the node until it's deleted - @TODO: use terraform function if possible
+	const maxRetries = 30
+	const retryInterval = 20 * time.Second
+
+	for i := 0; i < maxRetries; i++ {
+		transport, err := r.client.GetTransport(ctx, state.WorkspaceID.ValueString(), state.ID.ValueString())
+		if err != nil {
+			if strings.Contains(err.Error(), "status: 404") {
+				// Handle 404 error specifically
+				break
+			}
+			resp.Diagnostics.AddError(
+				"Error getting transport status",
+				"Could not get transport status, unexpected error: "+err.Error(),
+			)
+			return
+		}
+		if transport.State == models.AdministrativeStateDeleteError {
+			resp.Diagnostics.AddError(
+				"Error while deleting transport",
+				"Could not delete transport, error: code:"+transport.Error.Code+" msg: "+transport.Error.Msg,
+			)
+			return
+		}
+
+		time.Sleep(retryInterval)
+	}
 }
