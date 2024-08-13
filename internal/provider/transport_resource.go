@@ -254,6 +254,57 @@ func (r *transportResource) Create(ctx context.Context, req resource.CreateReque
 }
 
 func (r *transportResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	// Get current state
+	var state transportResourceModel
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Get refreshed transport value from Autonomi
+	transport, err := r.client.GetTransport(ctx, state.WorkspaceID.ValueString(), state.ID.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Reading Autonomi Transport",
+			"Could not read Autonomi Transpor ID "+state.ID.ValueString()+": "+err.Error(),
+		)
+		return
+	}
+
+	// Overwrite items with refreshed state
+	state.ID = types.StringValue(transport.ID.String())
+	state.CreatedAt = types.StringValue(transport.CreatedAt.String())
+	state.UpdatedAt = types.StringValue(transport.UpdatedAt.String())
+	state.Name = types.StringValue(transport.Name)
+	state.State = types.StringValue(transport.State.String())
+	state.Product = product{
+		SKU: types.StringValue(transport.Product.SKU),
+	}
+
+	state.ConnectionID = types.StringValue(transport.ConnectionID)
+	// set trnasportVlans object
+	vlansObject, diag := types.ObjectValue(
+		transportVlans,
+		map[string]attr.Value{
+			"a_vlan": types.Int64Value(transport.TransportVlans.AVlan),
+			"z_vlan": types.Int64Value(transport.TransportVlans.ZVlan),
+		},
+	)
+	state.Vlans = vlansObject
+
+	// Check for errors
+	if diag.HasError() {
+		resp.Diagnostics.Append(diag...)
+		return
+	}
+
+	// Set refreshed state
+	diags = resp.State.Set(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 }
 
 func (r *transportResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
