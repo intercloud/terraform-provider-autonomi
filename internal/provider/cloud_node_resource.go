@@ -38,6 +38,7 @@ type cloudNodeResourceModel struct {
 	WorkspaceID    types.String        `tfsdk:"workspace_id"`
 	CreatedAt      types.String        `tfsdk:"created_at"`
 	UpdatedAt      types.String        `tfsdk:"updated_at"`
+	DeployedAt     types.String        `tfsdk:"deployed_at"`
 	Name           types.String        `tfsdk:"name"`
 	State          types.String        `tfsdk:"administrative_state"`
 	Type           types.String        `tfsdk:"type"`
@@ -103,6 +104,10 @@ func (r *cloudNodeResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 			},
 			"updated_at": schema.StringAttribute{
 				MarkdownDescription: "Update date of the cloud node",
+				Computed:            true,
+			},
+			"deployed_at": schema.StringAttribute{
+				MarkdownDescription: "Deployment date of the cloud node",
 				Computed:            true,
 			},
 			"workspace_id": schema.StringAttribute{
@@ -286,8 +291,8 @@ func (r *cloudNodeResource) Read(ctx context.Context, req resource.ReadRequest, 
 	node, err := r.client.GetNode(ctx, state.WorkspaceID.ValueString(), state.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Reading HashiCups Order",
-			"Could not read HashiCups order ID "+state.ID.ValueString()+": "+err.Error(),
+			"Error Reading Autonomi cloud node",
+			"Could not read Autonomi cloud node ID "+state.ID.ValueString()+": "+err.Error(),
 		)
 		return
 	}
@@ -330,16 +335,16 @@ func (r *cloudNodeResource) Update(ctx context.Context, req resource.UpdateReque
 	}
 
 	// Generate API request body from plan
-	payload := models.UpdateNode{
+	payload := models.UpdateElement{
 		Name: plan.Name.ValueString(),
 	}
 
-	// Update existing workspace
+	// Update existing cloud node
 	node, err := r.client.UpdateNode(ctx, payload, plan.WorkspaceID.ValueString(), plan.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Updating Workspace",
-			fmt.Sprintf("Could not update Autonomi workspace: "+plan.ID.ValueString())+": error: "+err.Error(),
+			"Error Updating Cloud Node",
+			fmt.Sprintf("Could not update Autonomi cloud node: "+plan.ID.ValueString())+": error: "+err.Error(),
 		)
 		return
 	}
@@ -349,6 +354,9 @@ func (r *cloudNodeResource) Update(ctx context.Context, req resource.UpdateReque
 	plan.Name = types.StringValue(node.Name)
 	plan.CreatedAt = types.StringValue(node.CreatedAt.String())
 	plan.UpdatedAt = types.StringValue(node.UpdatedAt.String())
+	if node.DeployedAt != nil {
+		plan.DeployedAt = types.StringValue(node.DeployedAt.String())
+	}
 	plan.State = types.StringValue(node.State.String())
 	plan.Type = types.StringValue(node.Type.String())
 	plan.Product = product{

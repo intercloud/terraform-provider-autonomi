@@ -1,0 +1,6 @@
+# for more details on golangci-lint configuration file, see:
+# https://github.com/golangci/golangci-lint/blob/master/.golangci.reference.yml
+
+# options for analysis running
+run:
+  tests: true

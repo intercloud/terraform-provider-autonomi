@@ -24,6 +24,9 @@ go.work.sum
 # Terraform local file
 *.backup
 *.tfvars
+!examples/autonomi/terraform.auto.tfvars
 *.tfstate
+
+build/
 
 examples/autonomi/main.tf

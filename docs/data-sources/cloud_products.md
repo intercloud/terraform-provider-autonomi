@@ -53,7 +53,6 @@ Read-Only:
 - `location` (Map of Number)
 - `provider` (Map of Number)
 
-
 <a id="nestedatt--hits"></a>
 ### Nested Schema for `hits`
 
