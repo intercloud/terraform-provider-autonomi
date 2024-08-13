@@ -148,8 +148,8 @@ func (p *autonomiProvider) Configure(ctx context.Context, req provider.Configure
 		resp.Diagnostics.AddAttributeError(
 			path.Root("catalog_url"),
 			"Empty Catalog URL",
-			"The provider cannot create the Autonomi API client because the host url is not set."+
-				"Please explicitly set the host_url value in your Terraform configuration or use the HOST_URL environment variable to provide the token.",
+			"The provider cannot create the Autonomi API client because the catalog url is not set."+
+				"Please explicitly set the catalog_url value in your Terraform configuration or use the CATALOG_URL environment variable to provide the token.",
 		)
 	}
 
@@ -158,15 +158,6 @@ func (p *autonomiProvider) Configure(ctx context.Context, req provider.Configure
 		Host:   catalog_url,
 		APIKey: personal_access_token,
 	})
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unable to Create Catalog API Client",
-			"An unexpected error occurred when creating the Autonomi's catalog client. "+
-				"If the error is not clear, please contact the provider developers.\n\n"+
-				"Autonomi's Catalog Client Error: "+err.Error(),
-		)
-		return
-	}
 
 	// Create a Autonomi client using the configuration values
 	client, err := autonomisdk.NewClient(terms_and_conditions,
@@ -208,5 +199,6 @@ func (p *autonomiProvider) Resources(_ context.Context) []func() resource.Resour
 	return []func() resource.Resource{
 		NewWorkspaceResource,
 		NewCloudNodeResource,
+		NewTransportResource,
 	}
 }

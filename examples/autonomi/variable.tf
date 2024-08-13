@@ -61,11 +61,11 @@ variable "location" {
 variable "host_url" { // @TODO remove when it will be published
   description = "The hostname or base URL of the API endpoint for the Autonomi service. This URL is used by the custom Terraform provider to interact with the Autonomi API."
   type        = string
-  sensitive = true
+  sensitive   = true
 }
 
 variable "catalog_url" { // @TODO remove when it will be published
   description = "The hostname or base URL of the API endpoint for the Autonomi's catalog service. This URL is used by the custom Terraform provider to interact with the Autonomi's catalog API."
   type        = string
-  sensitive = true
+  sensitive   = true
 }

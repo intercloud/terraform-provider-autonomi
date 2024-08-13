@@ -39,6 +39,7 @@ resource "autonomi_cloud_node" "cloud_node" {
    creation_error, deployed, delete_pending, delete_proceed, delete_error]
 - `connection_id` (String) Connection ID created and returned by the cloud provider
 - `created_at` (String) Creation date of the cloud node
+- `deployed_at` (String) Deployment date of the cloud node
 - `dxcon_id` (String) Dxcon ID created and returned by AWS
 - `id` (String) ID of the cloud node, set after creation
 - `type` (String) Type of the node [cloud]
