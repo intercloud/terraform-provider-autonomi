@@ -291,8 +291,8 @@ func (r *cloudNodeResource) Read(ctx context.Context, req resource.ReadRequest, 
 	node, err := r.client.GetNode(ctx, state.WorkspaceID.ValueString(), state.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Reading HashiCups Order",
-			"Could not read HashiCups order ID "+state.ID.ValueString()+": "+err.Error(),
+			"Error Reading Autonomi cloud node",
+			"Could not read Autonomi cloud node ID "+state.ID.ValueString()+": "+err.Error(),
 		)
 		return
 	}
