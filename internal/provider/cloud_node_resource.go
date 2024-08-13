@@ -339,12 +339,12 @@ func (r *cloudNodeResource) Update(ctx context.Context, req resource.UpdateReque
 		Name: plan.Name.ValueString(),
 	}
 
-	// Update existing workspace
+	// Update existing cloud node
 	node, err := r.client.UpdateNode(ctx, payload, plan.WorkspaceID.ValueString(), plan.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Updating Workspace",
-			fmt.Sprintf("Could not update Autonomi workspace: "+plan.ID.ValueString())+": error: "+err.Error(),
+			"Error Updating Cloud Node",
+			fmt.Sprintf("Could not update Autonomi cloud node: "+plan.ID.ValueString())+": error: "+err.Error(),
 		)
 		return
 	}

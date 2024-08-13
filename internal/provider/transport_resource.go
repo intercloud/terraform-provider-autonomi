@@ -230,7 +230,7 @@ func (r *transportResource) Create(ctx context.Context, req resource.CreateReque
 	}
 	plan.ConnectionID = types.StringValue(transport.ConnectionID)
 
-	// set trnasportVlans object
+	// set transportVlans object
 	vlansObject, diag := types.ObjectValue(
 		transportVlans,
 		map[string]attr.Value{
@@ -309,6 +309,64 @@ func (r *transportResource) Read(ctx context.Context, req resource.ReadRequest, 
 }
 
 func (r *transportResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	// Retrieve values from plan
+	var plan transportResourceModel
+	diags := req.Plan.Get(ctx, &plan)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Generate API request body from plan
+	payload := models.UpdateElement{
+		Name: plan.Name.ValueString(),
+	}
+
+	// Update existing workspace
+	transport, err := r.client.UpdateTransport(ctx, payload, plan.WorkspaceID.ValueString(), plan.ID.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Updating Transport",
+			fmt.Sprintf("Could not update Autonomi transport: "+plan.ID.ValueString())+": error: "+err.Error(),
+		)
+		return
+	}
+
+	// Update resource state with updated items and timestamp
+	plan.ID = types.StringValue(transport.ID.String())
+	plan.Name = types.StringValue(transport.Name)
+	plan.CreatedAt = types.StringValue(transport.CreatedAt.String())
+	plan.UpdatedAt = types.StringValue(transport.UpdatedAt.String())
+	if transport.DeployedAt != nil {
+		plan.DeployedAt = types.StringValue(transport.DeployedAt.String())
+	}
+	plan.State = types.StringValue(transport.State.String())
+	plan.Product = product{
+		SKU: types.StringValue(transport.Product.SKU),
+	}
+	plan.ConnectionID = types.StringValue(transport.ConnectionID)
+
+	// set transportVlans object
+	vlansObject, diag := types.ObjectValue(
+		transportVlans,
+		map[string]attr.Value{
+			"a_vlan": types.Int64Value(transport.TransportVlans.AVlan),
+			"z_vlan": types.Int64Value(transport.TransportVlans.ZVlan),
+		},
+	)
+	plan.Vlans = vlansObject
+
+	// Check for errors
+	if diag.HasError() {
+		resp.Diagnostics.Append(diag...)
+		return
+	}
+
+	diags = resp.State.Set(ctx, plan)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 }
 
 func (r *transportResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
