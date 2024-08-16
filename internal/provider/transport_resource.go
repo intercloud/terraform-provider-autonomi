@@ -31,6 +31,7 @@ type transportResourceModel struct {
 	WorkspaceID  types.String `tfsdk:"workspace_id"`
 	CreatedAt    types.String `tfsdk:"created_at"`
 	UpdatedAt    types.String `tfsdk:"updated_at"`
+	DeployedAt   types.String `tfsdk:"deployed_at"`
 	Name         types.String `tfsdk:"name"`
 	State        types.String `tfsdk:"administrative_state"`
 	Product      product      `tfsdk:"product"`
@@ -100,6 +101,10 @@ func (r *transportResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
+			},
+			"deployed_at": schema.StringAttribute{
+				MarkdownDescription: "Deployment date of the transport",
+				Computed:            true,
 			},
 			"workspace_id": schema.StringAttribute{
 				MarkdownDescription: "ID of the workspace to which the transport belongs.",
@@ -193,6 +198,7 @@ func (r *transportResource) Create(ctx context.Context, req resource.CreateReque
 	plan.State = types.StringValue(transport.State.String())
 	plan.CreatedAt = types.StringValue(transport.CreatedAt.String())
 	plan.UpdatedAt = types.StringValue(transport.UpdatedAt.String())
+	plan.DeployedAt = types.StringValue(transport.DeployedAt.String())
 	plan.ConnectionID = types.StringValue(transport.ConnectionID)
 
 	// set transportVlans object
@@ -242,6 +248,7 @@ func (r *transportResource) Read(ctx context.Context, req resource.ReadRequest, 
 	state.ID = types.StringValue(transport.ID.String())
 	state.CreatedAt = types.StringValue(transport.CreatedAt.String())
 	state.UpdatedAt = types.StringValue(transport.UpdatedAt.String())
+	state.DeployedAt = types.StringValue(transport.DeployedAt.String())
 	state.Name = types.StringValue(transport.Name)
 	state.State = types.StringValue(transport.State.String())
 	state.Product = product{
@@ -302,6 +309,7 @@ func (r *transportResource) Update(ctx context.Context, req resource.UpdateReque
 	plan.Name = types.StringValue(transport.Name)
 	plan.CreatedAt = types.StringValue(transport.CreatedAt.String())
 	plan.UpdatedAt = types.StringValue(transport.UpdatedAt.String())
+	plan.DeployedAt = types.StringValue(transport.DeployedAt.String())
 	plan.State = types.StringValue(transport.State.String())
 	plan.Product = product{
 		SKU: types.StringValue(transport.Product.SKU),
