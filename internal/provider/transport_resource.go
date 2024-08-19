@@ -3,8 +3,6 @@ package provider
 import (
 	"context"
 	"fmt"
-	"strings"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -93,10 +91,16 @@ func (r *transportResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 			"created_at": schema.StringAttribute{
 				MarkdownDescription: "Creation date of the transport",
 				Computed:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"updated_at": schema.StringAttribute{
 				MarkdownDescription: "Update date of the transport",
 				Computed:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"deployed_at": schema.StringAttribute{
 				MarkdownDescription: "Deployment date of the transport",
@@ -109,10 +113,16 @@ func (r *transportResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 			"name": schema.StringAttribute{
 				MarkdownDescription: "Name of the transport",
 				Required:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"administrative_state": schema.StringAttribute{
 				MarkdownDescription: "Administrative state of the transport [creation_pending, creation_proceed, creation_error, deployed, delete_pending, delete_proceed, delete_error]",
 				Computed:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"product": schema.SingleNestedAttribute{
 				Required: true,
@@ -174,48 +184,11 @@ func (r *transportResource) Create(ctx context.Context, req resource.CreateReque
 	}
 
 	// Create new transport
-	transport, err := r.client.CreateTransport(ctx, payload, plan.WorkspaceID.ValueString())
+	transport, err := r.client.CreateTransport(ctx, payload, plan.WorkspaceID.ValueString(), autonomisdk.WithAdministrativeState(models.AdministrativeStateDeployed))
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating transport",
 			"Could not create transport, unexpected error: "+err.Error(),
-		)
-		return
-	}
-
-	// Poll the node status until it's "deployed" - TODO: find better polling system with terraform
-	const maxRetries = 30
-	const retryInterval = 20 * time.Second
-
-	for i := 0; i < maxRetries; i++ {
-		transport, err = r.client.GetTransport(ctx, plan.WorkspaceID.ValueString(), transport.ID.String())
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error getting transport status",
-				"Could not get nodtransporte status, unexpected error: "+err.Error(),
-			)
-			return
-		}
-
-		if transport.State == models.AdministrativeStateCreationError {
-			resp.Diagnostics.AddError(
-				"Error creating transport",
-				"Could not creating transport, unexpected error: code:"+transport.Error.Code+" msg: "+transport.Error.Msg,
-			)
-			return
-		}
-
-		if transport.State == models.AdministrativeStateDeployed {
-			break
-		}
-
-		time.Sleep(retryInterval)
-	}
-
-	if transport.State != models.AdministrativeStateDeployed {
-		resp.Diagnostics.AddError(
-			"Error creating transport",
-			"Node did not reach 'deployed' state in time.",
 		)
 		return
 	}
@@ -225,9 +198,7 @@ func (r *transportResource) Create(ctx context.Context, req resource.CreateReque
 	plan.State = types.StringValue(transport.State.String())
 	plan.CreatedAt = types.StringValue(transport.CreatedAt.String())
 	plan.UpdatedAt = types.StringValue(transport.UpdatedAt.String())
-	if transport.DeployedAt != nil {
-		plan.DeployedAt = types.StringValue(transport.DeployedAt.String())
-	}
+	plan.DeployedAt = types.StringValue(transport.DeployedAt.String())
 	plan.ConnectionID = types.StringValue(transport.ConnectionID)
 
 	// set transportVlans object
@@ -277,6 +248,7 @@ func (r *transportResource) Read(ctx context.Context, req resource.ReadRequest, 
 	state.ID = types.StringValue(transport.ID.String())
 	state.CreatedAt = types.StringValue(transport.CreatedAt.String())
 	state.UpdatedAt = types.StringValue(transport.UpdatedAt.String())
+	state.DeployedAt = types.StringValue(transport.DeployedAt.String())
 	state.Name = types.StringValue(transport.Name)
 	state.State = types.StringValue(transport.State.String())
 	state.Product = product{
@@ -337,9 +309,7 @@ func (r *transportResource) Update(ctx context.Context, req resource.UpdateReque
 	plan.Name = types.StringValue(transport.Name)
 	plan.CreatedAt = types.StringValue(transport.CreatedAt.String())
 	plan.UpdatedAt = types.StringValue(transport.UpdatedAt.String())
-	if transport.DeployedAt != nil {
-		plan.DeployedAt = types.StringValue(transport.DeployedAt.String())
-	}
+	plan.DeployedAt = types.StringValue(transport.DeployedAt.String())
 	plan.State = types.StringValue(transport.State.String())
 	plan.Product = product{
 		SKU: types.StringValue(transport.Product.SKU),
@@ -379,40 +349,12 @@ func (r *transportResource) Delete(ctx context.Context, req resource.DeleteReque
 	}
 
 	// Delete existing node
-	_, err := r.client.DeleteTransport(ctx, state.WorkspaceID.ValueString(), state.ID.ValueString())
+	_, err := r.client.DeleteTransport(ctx, state.WorkspaceID.ValueString(), state.ID.ValueString(), autonomisdk.WithAdministrativeState(models.AdministrativeStateDeleted))
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Deleting transport",
 			"Could not delete transport, unexpected error: "+err.Error(),
 		)
 		return
-	}
-
-	// Poll the node until it's deleted - @TODO: use terraform function if possible
-	const maxRetries = 30
-	const retryInterval = 20 * time.Second
-
-	for i := 0; i < maxRetries; i++ {
-		transport, err := r.client.GetTransport(ctx, state.WorkspaceID.ValueString(), state.ID.ValueString())
-		if err != nil {
-			if strings.Contains(err.Error(), "status: 404") {
-				// Handle 404 error specifically
-				break
-			}
-			resp.Diagnostics.AddError(
-				"Error getting transport status",
-				"Could not get transport status, unexpected error: "+err.Error(),
-			)
-			return
-		}
-		if transport.State == models.AdministrativeStateDeleteError {
-			resp.Diagnostics.AddError(
-				"Error while deleting transport",
-				"Could not delete transport, error: code:"+transport.Error.Code+" msg: "+transport.Error.Msg,
-			)
-			return
-		}
-
-		time.Sleep(retryInterval)
 	}
 }

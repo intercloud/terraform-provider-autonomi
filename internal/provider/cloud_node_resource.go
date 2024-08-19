@@ -3,8 +3,6 @@ package provider
 import (
 	"context"
 	"fmt"
-	"strings"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -214,48 +212,11 @@ func (r *cloudNodeResource) Create(ctx context.Context, req resource.CreateReque
 	}
 
 	// Create new node
-	node, err := r.client.CreateNode(ctx, payload, plan.WorkspaceID.ValueString())
+	node, err := r.client.CreateNode(ctx, payload, plan.WorkspaceID.ValueString(), autonomisdk.WithAdministrativeState(models.AdministrativeStateDeployed))
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating node",
 			"Could not create node, unexpected error: "+err.Error(),
-		)
-		return
-	}
-
-	// Poll the node status until it's "deployed" - TODO: find better polling system with terraform
-	const maxRetries = 30
-	const retryInterval = 20 * time.Second
-
-	for i := 0; i < maxRetries; i++ {
-		node, err = r.client.GetNode(ctx, plan.WorkspaceID.ValueString(), node.ID.String())
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error getting node status",
-				"Could not get node status, unexpected error: "+err.Error(),
-			)
-			return
-		}
-
-		if node.State == models.AdministrativeStateCreationError {
-			resp.Diagnostics.AddError(
-				"Error creating node",
-				"Could not creating node, unexpected error: code:"+node.Error.Code+" msg: "+node.Error.Msg,
-			)
-			return
-		}
-
-		if node.State == models.AdministrativeStateDeployed {
-			break
-		}
-
-		time.Sleep(retryInterval)
-	}
-
-	if node.State != models.AdministrativeStateDeployed {
-		resp.Diagnostics.AddError(
-			"Error creating node",
-			"Node did not reach 'deployed' state in time.",
 		)
 		return
 	}
@@ -266,6 +227,7 @@ func (r *cloudNodeResource) Create(ctx context.Context, req resource.CreateReque
 	plan.Type = types.StringValue(node.Type.String())
 	plan.CreatedAt = types.StringValue(node.CreatedAt.String())
 	plan.UpdatedAt = types.StringValue(node.UpdatedAt.String())
+	plan.DeployedAt = types.StringValue(node.DeployedAt.String())
 	plan.ConnectionID = types.StringValue(node.ConnectionID)
 	plan.Vlan = types.Int64Value(node.Vlan)
 	plan.DxconID = types.StringValue(node.DxconID)
@@ -301,6 +263,7 @@ func (r *cloudNodeResource) Read(ctx context.Context, req resource.ReadRequest, 
 	state.ID = types.StringValue(node.ID.String())
 	state.CreatedAt = types.StringValue(node.CreatedAt.String())
 	state.UpdatedAt = types.StringValue(node.UpdatedAt.String())
+	state.DeployedAt = types.StringValue(node.DeployedAt.String())
 	state.Name = types.StringValue(node.Name)
 	state.State = types.StringValue(node.State.String())
 	state.Type = types.StringValue(node.Type.String())
@@ -354,9 +317,7 @@ func (r *cloudNodeResource) Update(ctx context.Context, req resource.UpdateReque
 	plan.Name = types.StringValue(node.Name)
 	plan.CreatedAt = types.StringValue(node.CreatedAt.String())
 	plan.UpdatedAt = types.StringValue(node.UpdatedAt.String())
-	if node.DeployedAt != nil {
-		plan.DeployedAt = types.StringValue(node.DeployedAt.String())
-	}
+	plan.DeployedAt = types.StringValue(node.DeployedAt.String())
 	plan.State = types.StringValue(node.State.String())
 	plan.Type = types.StringValue(node.Type.String())
 	plan.Product = product{
@@ -394,40 +355,12 @@ func (r *cloudNodeResource) Delete(ctx context.Context, req resource.DeleteReque
 	}
 
 	// Delete existing node
-	_, err := r.client.DeleteNode(ctx, state.WorkspaceID.ValueString(), state.ID.ValueString())
+	_, err := r.client.DeleteNode(ctx, state.WorkspaceID.ValueString(), state.ID.ValueString(), autonomisdk.WithAdministrativeState(models.AdministrativeStateDeleted))
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Deleting node",
 			"Could not delete node, unexpected error: "+err.Error(),
 		)
 		return
-	}
-
-	// Poll the node until it's deleted - @TODO: use terraform function if possible
-	const maxRetries = 30
-	const retryInterval = 20 * time.Second
-
-	for i := 0; i < maxRetries; i++ {
-		node, err := r.client.GetNode(ctx, state.WorkspaceID.ValueString(), state.ID.ValueString())
-		if err != nil {
-			if strings.Contains(err.Error(), "status: 404") {
-				// Handle 404 error specifically
-				break
-			}
-			resp.Diagnostics.AddError(
-				"Error getting node status",
-				"Could not get node status, unexpected error: "+err.Error(),
-			)
-			return
-		}
-		if node.State == models.AdministrativeStateDeleteError {
-			resp.Diagnostics.AddError(
-				"Error while deleting node",
-				"Could not delete node, error: code:"+node.Error.Code+" msg: "+node.Error.Msg,
-			)
-			return
-		}
-
-		time.Sleep(retryInterval)
 	}
 }
