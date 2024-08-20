@@ -23,7 +23,6 @@ type attachmentResourceModel struct {
 	ID          types.String `tfsdk:"id"`
 	CreatedAt   types.String `tfsdk:"created_at"`
 	UpdatedAt   types.String `tfsdk:"updated_at"`
-	DeployedAt  types.String `tfsdk:"deployed_at"`
 	WorkspaceID types.String `tfsdk:"workspace_id"`
 	NodeID      types.String `tfsdk:"node_id"`
 	TransportID types.String `tfsdk:"transport_id"`
@@ -74,26 +73,22 @@ func (r *attachmentResource) Schema(_ context.Context, _ resource.SchemaRequest,
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
-				MarkdownDescription: "ID of the cloud attachment, set after creation",
+				MarkdownDescription: "ID of the attachment, set after creation",
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"created_at": schema.StringAttribute{
-				MarkdownDescription: "Creation date of the cloud attachment",
+				MarkdownDescription: "Creation date of the attachment",
 				Computed:            true,
 			},
 			"updated_at": schema.StringAttribute{
-				MarkdownDescription: "Update date of the cloud attachment",
-				Computed:            true,
-			},
-			"deployed_at": schema.StringAttribute{
-				MarkdownDescription: "Deployment date of the cloud attachment",
+				MarkdownDescription: "Update date of the attachment",
 				Computed:            true,
 			},
 			"workspace_id": schema.StringAttribute{
-				MarkdownDescription: "ID of the workspace to which the cloud attachment belongs.",
+				MarkdownDescription: "ID of the workspace to which the attachment belongs.",
 				Required:            true,
 			},
 			"node_id": schema.StringAttribute{
@@ -105,7 +100,7 @@ func (r *attachmentResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				Required:            true,
 			},
 			"administrative_state": schema.StringAttribute{
-				MarkdownDescription: "Administrative state of the cloud attachment [creation_pending, creation_proceed, creation_error, deployed, delete_pending, delete_proceed, delete_error]",
+				MarkdownDescription: "Administrative state of the attachment [creation_pending, creation_proceed, creation_error, deployed, delete_pending, delete_proceed, delete_error]",
 				Computed:            true,
 			},
 			"side": schema.StringAttribute{
@@ -116,7 +111,7 @@ func (r *attachmentResource) Schema(_ context.Context, _ resource.SchemaRequest,
 	}
 }
 
-// CreateNode creates the resource and sets the initial Terraform state.
+// CreateAttachment creates the resource and sets the initial Terraform state.
 func (r *attachmentResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	// Retrieve values from plan
 	var plan attachmentResourceModel
@@ -133,7 +128,7 @@ func (r *attachmentResource) Create(ctx context.Context, req resource.CreateRequ
 	}
 
 	// Create new attachment
-	attachment, err := r.client.CreateAttachment(ctx, payload, plan.WorkspaceID.ValueString())
+	attachment, err := r.client.CreateAttachment(ctx, payload, plan.WorkspaceID.ValueString(), autonomisdk.WithAdministrativeState(models.AdministrativeStateDeployed))
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating attachment",
@@ -145,7 +140,7 @@ func (r *attachmentResource) Create(ctx context.Context, req resource.CreateRequ
 	if attachment.State != models.AdministrativeStateDeployed {
 		resp.Diagnostics.AddError(
 			"Error creating attachment",
-			"Node did not reach 'deployed' state in time.",
+			"Attachment did not reach 'deployed' state in time.",
 		)
 		return
 	}
@@ -154,7 +149,6 @@ func (r *attachmentResource) Create(ctx context.Context, req resource.CreateRequ
 	plan.ID = types.StringValue(attachment.ID.String())
 	plan.CreatedAt = types.StringValue(attachment.CreatedAt.String())
 	plan.UpdatedAt = types.StringValue(attachment.UpdatedAt.String())
-	plan.DeployedAt = types.StringValue(attachment.DeployedAt.String())
 	plan.State = types.StringValue(attachment.State.String())
 	plan.NodeID = types.StringValue(attachment.NodeID)
 	plan.TransportID = types.StringValue(attachment.TransportID)
@@ -181,8 +175,8 @@ func (r *attachmentResource) Read(ctx context.Context, req resource.ReadRequest,
 	attachment, err := r.client.GetAttachment(ctx, state.WorkspaceID.ValueString(), state.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Reading Autonomi cloud attachment",
-			"Could not read Autonomi cloud attachment ID "+state.ID.ValueString()+": "+err.Error(),
+			"Error Reading Autonomi attachment",
+			"Could not read Autonomi attachment ID "+state.ID.ValueString()+": "+err.Error(),
 		)
 		return
 	}
@@ -191,7 +185,6 @@ func (r *attachmentResource) Read(ctx context.Context, req resource.ReadRequest,
 	state.ID = types.StringValue(attachment.ID.String())
 	state.CreatedAt = types.StringValue(attachment.CreatedAt.String())
 	state.UpdatedAt = types.StringValue(attachment.UpdatedAt.String())
-	state.DeployedAt = types.StringValue(attachment.DeployedAt.String())
 	state.State = types.StringValue(attachment.State.String())
 	state.NodeID = types.StringValue(attachment.NodeID)
 	state.TransportID = types.StringValue(attachment.TransportID)
