@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -140,6 +141,15 @@ func (r *accessNodeResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
+	parsePhysicalPortID, err := uuid.Parse(plan.PhysicalPortID.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error parsing physical port id",
+			"Could not create node, unexpected error: "+err.Error(),
+		)
+		return
+	}
+
 	// Generate API request body from plan
 	payload := models.CreateNode{
 		Name: plan.Name.ValueString(),
@@ -147,8 +157,8 @@ func (r *accessNodeResource) Create(ctx context.Context, req resource.CreateRequ
 		Product: models.AddProduct{
 			SKU: plan.Product.SKU.ValueString(),
 		},
-		// Vlan: plan.Vlan,
-		// PhysicalPortID: plan.PhysicalPortID,
+		Vlan:           plan.Vlan.ValueInt64(),
+		PhysicalPortID: &parsePhysicalPortID,
 	}
 
 	// Create new node
@@ -169,7 +179,7 @@ func (r *accessNodeResource) Create(ctx context.Context, req resource.CreateRequ
 	plan.UpdatedAt = types.StringValue(node.UpdatedAt.String())
 	plan.DeployedAt = types.StringValue(node.DeployedAt.String())
 	plan.Vlan = types.Int64Value(node.Vlan)
-	// plan.PhysicalPortID = types.StringValue(node.PhysicalPortID.String())
+	plan.PhysicalPortID = types.StringValue(node.PhysicalPort.ID.String())
 
 	// Set state to fully populated data
 	diags = resp.State.Set(ctx, plan)
@@ -180,10 +190,107 @@ func (r *accessNodeResource) Create(ctx context.Context, req resource.CreateRequ
 }
 
 func (r *accessNodeResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	// Get current state
+	var state accessNodeResourceModel
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Get refreshed node value from Autonomi
+	node, err := r.client.GetNode(ctx, state.WorkspaceID.ValueString(), state.ID.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Reading Autonomi access node",
+			"Could not read Autonomi access node ID "+state.ID.ValueString()+": "+err.Error(),
+		)
+		return
+	}
+
+	// Overwrite items with refreshed state
+	state.ID = types.StringValue(node.ID.String())
+	state.CreatedAt = types.StringValue(node.CreatedAt.String())
+	state.UpdatedAt = types.StringValue(node.UpdatedAt.String())
+	state.DeployedAt = types.StringValue(node.DeployedAt.String())
+	state.Name = types.StringValue(node.Name)
+	state.State = types.StringValue(node.State.String())
+	state.Type = types.StringValue(node.Type.String())
+	state.Product = product{
+		SKU: types.StringValue(node.Product.SKU),
+	}
+	state.PhysicalPortID = types.StringValue(node.PhysicalPort.ID.String())
+	state.Vlan = types.Int64Value(node.Vlan)
+
+	// Set refreshed state
+	diags = resp.State.Set(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 }
 
 func (r *accessNodeResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	// Retrieve values from plan
+	var plan accessNodeResourceModel
+	diags := req.Plan.Get(ctx, &plan)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Generate API request body from plan
+	payload := models.UpdateElement{
+		Name: plan.Name.ValueString(),
+	}
+
+	// Update existing access node
+	node, err := r.client.UpdateNode(ctx, payload, plan.WorkspaceID.ValueString(), plan.ID.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Updating Access Node",
+			fmt.Sprintf("Could not update Autonomi access node: "+plan.ID.ValueString())+": error: "+err.Error(),
+		)
+		return
+	}
+
+	// Update resource state with updated items and timestamp
+	plan.ID = types.StringValue(node.ID.String())
+	plan.Name = types.StringValue(node.Name)
+	plan.CreatedAt = types.StringValue(node.CreatedAt.String())
+	plan.UpdatedAt = types.StringValue(node.UpdatedAt.String())
+	plan.DeployedAt = types.StringValue(node.DeployedAt.String())
+	plan.State = types.StringValue(node.State.String())
+	plan.Type = types.StringValue(node.Type.String())
+	plan.Product = product{
+		SKU: types.StringValue(node.Product.SKU),
+	}
+	plan.Vlan = types.Int64Value(node.Vlan)
+	plan.PhysicalPortID = types.StringValue(node.PhysicalPort.ID.String())
+
+	diags = resp.State.Set(ctx, plan)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 }
 
 func (r *accessNodeResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	// Retrieve values from state
+	var state accessNodeResourceModel
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Delete existing node
+	_, err := r.client.DeleteNode(ctx, state.WorkspaceID.ValueString(), state.ID.ValueString(), autonomisdk.WithAdministrativeState(models.AdministrativeStateDeleted))
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error Deleting node",
+			"Could not delete node, unexpected error: "+err.Error(),
+		)
+		return
+	}
 }
