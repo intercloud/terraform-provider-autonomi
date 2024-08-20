@@ -8,11 +8,9 @@ require (
 	github.com/hashicorp/terraform-plugin-go v0.23.0
 	github.com/hashicorp/terraform-plugin-log v0.9.0
 	github.com/hashicorp/terraform-plugin-testing v1.9.0
-	github.com/intercloud/autonomi-sdk v0.0.9
+	github.com/intercloud/autonomi-sdk v0.0.10
 	github.com/meilisearch/meilisearch-go v0.27.2
 )
-
-replace github.com/intercloud/autonomi-sdk => ../autonomi-sdk
 
 require (
 	github.com/ProtonMail/go-crypto v1.1.0-alpha.2 // indirect
