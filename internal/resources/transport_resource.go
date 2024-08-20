@@ -1,4 +1,4 @@
-package provider
+package autonomiresource
 
 import (
 	"context"

@@ -8,19 +8,8 @@ type TransportFilters struct {
 }
 
 type TransportProduct struct {
-	ID                 int    `json:"id"`
-	Provider           string `json:"provider"`
-	Location           string `json:"location"`
-	LocationUnderlay   string `json:"locationUnderlay"`
-	LocationTo         string `json:"locationTo"`
-	LocationToUnderlay string `json:"locationToUnderlay"`
-	Bandwidth          int    `json:"bandwidth"`
-	Date               string `json:"date"`
-	PriceNRC           int    `json:"priceNrc"`
-	PriceMRC           int    `json:"priceMrc"`
-	CostNRC            int    `json:"costNrc"`
-	CostMRC            int    `json:"costMrc"`
-	SKU                string `json:"sku"`
+	Product
+	LocationTo string `json:"locationTo"`
 }
 
 type TransportFacetDistribution struct {

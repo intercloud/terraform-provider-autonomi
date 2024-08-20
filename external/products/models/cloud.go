@@ -4,24 +4,14 @@ type CloudFilters struct {
 	CSPName   string
 	CSPRegion string
 	CSPCity   string
-	Provider  string
+	Provider  ProviderType
 	Location  string
 	Bandwidth int
 }
 
 type CloudProduct struct {
-	ID        int    `json:"id"`
-	Provider  string `json:"provider"`
-	Duration  int    `json:"duration"`
-	Location  string `json:"location"`
-	Bandwidth int    `json:"bandwidth"`
-	Date      string `json:"date"`
-	PriceNRC  int    `json:"priceNrc"`
-	PriceMRC  int    `json:"priceMrc"`
-	CostNRC   int    `json:"costNrc"`
-	CostMRC   int    `json:"costMrc"`
-	SKU       string `json:"sku"`
-	CSPName   string `json:"cspName"`
+	Product
+	CSPName string `json:"cspName"`
 }
 
 type CloudFacetDistribution struct {

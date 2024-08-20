@@ -13,6 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	autonomisdk "github.com/intercloud/autonomi-sdk"
+	datasources "github.com/intercloud/terraform-provider-autonomi/internal/data_sources"
+	autonomiresource "github.com/intercloud/terraform-provider-autonomi/internal/resources"
 	"github.com/meilisearch/meilisearch-go"
 )
 
@@ -190,17 +192,18 @@ func (p *autonomiProvider) Configure(ctx context.Context, req provider.Configure
 // DataSources defines the data sources implemented in the provider.
 func (p *autonomiProvider) DataSources(_ context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
-		NewCloudProductDataSource,
-		NewTransportProductDataSource,
+		datasources.NewCloudProductDataSource,
+		datasources.NewTransportProductDataSource,
+		datasources.NewAccessProductDataSource,
 	}
 }
 
 // Resources defines the resources implemented in the provider.
 func (p *autonomiProvider) Resources(_ context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
-		NewWorkspaceResource,
-		NewCloudNodeResource,
-		NewTransportResource,
-		NewAttachmentResource,
+		autonomiresource.NewWorkspaceResource,
+		autonomiresource.NewCloudNodeResource,
+		autonomiresource.NewTransportResource,
+		autonomiresource.NewAttachmentResource,
 	}
 }
