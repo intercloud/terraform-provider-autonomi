@@ -11,7 +11,7 @@ description: |-
 ## Example Usage
 
 ```terraform
-resource "autonomi_workspace" {
+resource "autonomi_workspace" "workspace" {
   name = "Workspace Name"
   description = "this is a description"
 }
