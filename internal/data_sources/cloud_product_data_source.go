@@ -1,4 +1,4 @@
-package provider
+package datasources
 
 import (
 	"context"
@@ -19,7 +19,7 @@ type cloudProductDataSource struct {
 	client *meilisearch.Client
 }
 
-type cloudProductDataSourceModel struct {
+type cloudHits struct {
 	ID        types.Int64   `tfsdk:"id"`
 	Provider  types.String  `tfsdk:"provider"`
 	Duration  types.Int64   `tfsdk:"duration"`
@@ -50,7 +50,7 @@ type cloudsProductDataSourceModel struct {
 	UnderlayProvider  types.String                           `tfsdk:"underlay_provider"`
 	Location          types.String                           `tfsdk:"location"`
 	Bandwidth         types.Int64                            `tfsdk:"bandwidth"`
-	Hits              []cloudProductDataSourceModel          `tfsdk:"hits"`
+	Hits              []cloudHits                            `tfsdk:"hits"`
 	FacetDistribution *cloudFacetDistributionDataSourceModel `tfsdk:"facet_distribution"`
 }
 
@@ -67,11 +67,6 @@ func NewCloudProductDataSource() datasource.DataSource {
 // Metadata returns the data source type name.
 func (d *cloudProductDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_cloud_products"
-}
-
-var int64MapAttr = schema.MapAttribute{
-	ElementType: types.Int64Type,
-	Computed:    true,
 }
 
 // Schema defines the schema for the data source.
@@ -172,7 +167,7 @@ func (d *cloudProductDataSource) Read(ctx context.Context, req datasource.ReadRe
 
 	filters := models.CloudFilters{
 		CSPName:   data.CSPName.ValueString(),
-		Provider:  data.UnderlayProvider.ValueString(),
+		Provider:  models.ProviderType(data.UnderlayProvider.ValueString()),
 		Location:  data.Location.ValueString(),
 		Bandwidth: int(data.Bandwidth.ValueInt64()),
 	}
@@ -240,11 +235,18 @@ func (d *cloudProductDataSource) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 
-	var state cloudsProductDataSourceModel
+	state := cloudsProductDataSourceModel{
+		CSPName:          data.CSPName,
+		CSPCity:          data.CSPCity,
+		CSPRegion:        data.CSPRegion,
+		UnderlayProvider: data.UnderlayProvider,
+		Bandwidth:        data.Bandwidth,
+		Location:         data.Location,
+	}
 
 	// Map response body to model
 	for _, cp := range cloudProducts.Hits {
-		cloudProductState := cloudProductDataSourceModel{
+		cloudProductState := cloudHits{
 			ID:        types.Int64Value(int64(cp.ID)),
 			Provider:  types.StringValue(cp.Provider),
 			Duration:  types.Int64Value(int64(cp.Duration)),

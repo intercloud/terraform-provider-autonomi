@@ -58,6 +58,16 @@ variable "location" {
   }
 }
 
+variable "location_to" {
+  description = "The Location"
+  type        = string
+
+  validation {
+    condition     = contains(["EQUINIX AM2", "EQUINIX DC2", "EQUINIX FR5", "EQUINIX HK2", "EQUINIX LD5", "EQUINIX PA3", "EQUINIX SG1", "EQUINIX SV5"], var.location_to)
+    error_message = "The location_to value must be 'EQUINIX AM2', 'EQUINIX DC2', 'EQUINIX FR5', 'EQUINIX HK2', 'EQUINIX LD5', 'EQUINIX PA3', 'EQUINIX SG1', 'EQUINIX SV5'."
+  }
+}
+
 variable "host_url" { // @TODO remove when it will be published
   description = "The hostname or base URL of the API endpoint for the Autonomi service. This URL is used by the custom Terraform provider to interact with the Autonomi API."
   type        = string

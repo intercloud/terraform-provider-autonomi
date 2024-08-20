@@ -4,5 +4,6 @@ csp_region = "eu-west-3"
 underlay_provider = "EQUINIX"
 bandwidth = 50
 location = "EQUINIX AM2"
+location_to = "EQUINIX LD5"
 host_url = "https://api.autonomi.io"
 catalog_url = "https://catalog.autonomi.io"

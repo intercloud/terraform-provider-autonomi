@@ -1,4 +1,4 @@
-package provider
+package datasources
 
 import (
 	"context"
@@ -19,14 +19,11 @@ type transportProductDataSource struct {
 	client *meilisearch.Client
 }
 
-type transportProductDataSourceModel struct {
+type transportHits struct {
 	ID                 types.Int64   `tfsdk:"id"`
 	Provider           types.String  `tfsdk:"provider"`
 	Duration           types.Int64   `tfsdk:"duration"`
 	Location           types.String  `tfsdk:"location"`
-	LocationUnderlay   types.String  `tfsdk:"location_underlay"`
-	LocationTo         types.String  `tfsdk:"location_to"`
-	LocationToUnderlay types.String  `tfsdk:"location_to_underlay"`
 	Bandwidth          types.Int64   `tfsdk:"bandwidth"`
 	Date               types.String  `tfsdk:"date"`
 	PriceNRC           types.Float64 `tfsdk:"price_nrc"`
@@ -34,6 +31,8 @@ type transportProductDataSourceModel struct {
 	CostNRC            types.Float64 `tfsdk:"cost_nrc"`
 	CostMRC            types.Float64 `tfsdk:"cost_mrc"`
 	SKU                types.String  `tfsdk:"sku"`
+	LocationTo         types.String  `tfsdk:"location_to"`
+	LocationToUnderlay types.String  `tfsdk:"location_to_underlay"`
 }
 
 type transportFacetDistributionDataSourceModel struct {
@@ -48,7 +47,7 @@ type transportsProductDataSourceModel struct {
 	Location          types.String                               `tfsdk:"location"`
 	LocationTo        types.String                               `tfsdk:"location_to"`
 	Bandwidth         types.Int64                                `tfsdk:"bandwidth"`
-	Hits              []transportProductDataSourceModel          `tfsdk:"hits"`
+	Hits              []transportHits                            `tfsdk:"hits"`
 	FacetDistribution *transportFacetDistributionDataSourceModel `tfsdk:"facet_distribution"`
 }
 
@@ -217,24 +216,27 @@ func (d *transportProductDataSource) Read(ctx context.Context, req datasource.Re
 		return
 	}
 
-	var state transportsProductDataSourceModel
+	state := transportsProductDataSourceModel{
+		UnderlayProvider: data.UnderlayProvider,
+		Location:         data.Location,
+		LocationTo:       data.LocationTo,
+		Bandwidth:        data.Bandwidth,
+	}
 
 	// Map response body to model
 	for _, cp := range transportProducts.Hits {
-		transportProductState := transportProductDataSourceModel{
-			ID:                 types.Int64Value(int64(cp.ID)),
-			Provider:           types.StringValue(cp.Provider),
-			Location:           types.StringValue(cp.Location),
-			LocationUnderlay:   types.StringValue(cp.LocationUnderlay),
-			LocationTo:         types.StringValue(cp.LocationTo),
-			LocationToUnderlay: types.StringValue(cp.LocationToUnderlay),
-			Bandwidth:          types.Int64Value(int64(cp.Bandwidth)),
-			Date:               types.StringValue(cp.Date),
-			PriceNRC:           types.Float64Value(float64(cp.PriceNRC)),
-			PriceMRC:           types.Float64Value(float64(cp.PriceMRC)),
-			CostNRC:            types.Float64Value(float64(cp.CostNRC)),
-			CostMRC:            types.Float64Value(float64(cp.CostMRC)),
-			SKU:                types.StringValue(cp.SKU),
+		transportProductState := transportHits{
+			ID:         types.Int64Value(int64(cp.ID)),
+			Provider:   types.StringValue(cp.Provider),
+			Location:   types.StringValue(cp.Location),
+			Bandwidth:  types.Int64Value(int64(cp.Bandwidth)),
+			Date:       types.StringValue(cp.Date),
+			PriceNRC:   types.Float64Value(float64(cp.PriceNRC)),
+			PriceMRC:   types.Float64Value(float64(cp.PriceMRC)),
+			CostNRC:    types.Float64Value(float64(cp.CostNRC)),
+			CostMRC:    types.Float64Value(float64(cp.CostMRC)),
+			SKU:        types.StringValue(cp.SKU),
+			LocationTo: types.StringValue(cp.LocationTo),
 		}
 		state.Hits = append(state.Hits, transportProductState)
 	}
