@@ -201,5 +201,6 @@ func (p *autonomiProvider) Resources(_ context.Context) []func() resource.Resour
 		NewWorkspaceResource,
 		NewCloudNodeResource,
 		NewTransportResource,
+		NewAttachmentResource,
 	}
 }
