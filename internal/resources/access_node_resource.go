@@ -39,7 +39,7 @@ var (
 	_ resource.ResourceWithConfigure = &accessNodeResource{}
 )
 
-// NewCloudNodeResource is a helper function to simplify the provider implementation.
+// NewAccessNodeResource is a helper function to simplify the provider implementation.
 func NewAccessNodeResource() resource.Resource {
 	return &accessNodeResource{}
 }
