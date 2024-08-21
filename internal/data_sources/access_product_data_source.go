@@ -76,8 +76,9 @@ func (d *accessProductDataSource) Schema(_ context.Context, _ datasource.SchemaR
 						"operator": schema.StringAttribute{
 							Optional: true,
 						},
-						"value": schema.StringAttribute{
-							Optional: true,
+						"values": schema.ListAttribute{
+							ElementType: types.StringType,
+							Optional:    true,
 						},
 					},
 				},
@@ -160,9 +161,11 @@ func (d *accessProductDataSource) Read(ctx context.Context, req datasource.ReadR
 		fmt.Sprintf("%s %s \"%s\"", "provider", "=", models.INTERCLOUD),
 		fmt.Sprintf("%s %s \"%s\"", "type", "=", models.PHYSICAL),
 	}
-	for _, filter := range data.Filters {
-		filterStrings = append(filterStrings, fmt.Sprintf("%s %s \"%s\"", filter.Name.ValueString(), filter.Operator.ValueString(), filter.Value.ValueString()))
+	filtersToAdd, err := getFiltersString(data.Filters)
+	if err != nil {
+		resp.Diagnostics.AddError(err.Error(), "")
 	}
+	filterStrings = append(filterStrings, filtersToAdd...)
 
 	// Define the search request
 	searchRequest := &meilisearch.SearchRequest{
