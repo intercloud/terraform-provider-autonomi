@@ -187,7 +187,7 @@ func (r *cloudNodeResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 	}
 }
 
-// CreateNode creates the resource and sets the initial Terraform state.
+// Create creates the resource and sets the initial Terraform state.
 func (r *cloudNodeResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	// Retrieve values from plan
 	var plan cloudNodeResourceModel

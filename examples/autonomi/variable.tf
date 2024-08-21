@@ -19,6 +19,7 @@ variable "pat_token" {
 variable "aws_account_id" {
   description = "The AWS Account ID associated with the resources to be managed. This ID is required to uniquely identify and manage resources within the specified AWS account."
   type        = string
+  default = null
 }
 
 variable "csp_name" {
