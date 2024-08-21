@@ -41,6 +41,7 @@ type accessFacetDistributionDataSourceModel struct {
 type accessProductDataSourceModel struct {
 	Location          types.String                            `tfsdk:"location"`
 	Bandwidth         types.Int64                             `tfsdk:"bandwidth"`
+	Filters           []filter                                `tfsdk:"filters"`
 	Hits              []accessHits                            `tfsdk:"hits"`
 	FacetDistribution *accessFacetDistributionDataSourceModel `tfsdk:"facet_distribution"`
 }
@@ -64,6 +65,23 @@ func (d *accessProductDataSource) Metadata(_ context.Context, req datasource.Met
 func (d *accessProductDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"filters": schema.ListNestedAttribute{
+				MarkdownDescription: "List of filters",
+				Optional:            true,
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"name": schema.StringAttribute{
+							Optional: true,
+						},
+						"operator": schema.StringAttribute{
+							Optional: true,
+						},
+						"value": schema.StringAttribute{
+							Optional: true,
+						},
+					},
+				},
+			},
 			"location": schema.StringAttribute{
 				MarkdownDescription: "Name of the Location: expected values are [...]",
 				Optional:            true,
@@ -137,27 +155,13 @@ func (d *accessProductDataSource) Read(ctx context.Context, req datasource.ReadR
 		return
 	}
 
-	filters := models.AccessFilters{
-		Provider:  models.INTERCLOUD,
-		Location:  data.Location.ValueString(),
-		Bandwidth: int(data.Bandwidth.ValueInt64()),
-		Type:      models.PHYSICAL,
-	}
-
 	// Create the filter string dynamically
-	var filterStrings []string
-
-	if filters.Provider != "" {
-		filterStrings = append(filterStrings, fmt.Sprintf("provider = \"%s\"", filters.Provider))
+	filterStrings := []string{
+		fmt.Sprintf("%s %s \"%s\"", "provider", "=", models.INTERCLOUD),
+		fmt.Sprintf("%s %s \"%s\"", "type", "=", models.PHYSICAL),
 	}
-	if filters.Location != "" {
-		filterStrings = append(filterStrings, fmt.Sprintf("location = \"%s\"", filters.Location))
-	}
-	if filters.Bandwidth != 0 {
-		filterStrings = append(filterStrings, fmt.Sprintf("bandwidth = %d", filters.Bandwidth))
-	}
-	if filters.Type != "" {
-		filterStrings = append(filterStrings, fmt.Sprintf("type = \"%s\"", filters.Type))
+	for _, filter := range data.Filters {
+		filterStrings = append(filterStrings, fmt.Sprintf("%s %s \"%s\"", filter.Name.ValueString(), filter.Operator.ValueString(), filter.Value.ValueString()))
 	}
 
 	// Define the search request

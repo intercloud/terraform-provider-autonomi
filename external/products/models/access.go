@@ -7,13 +7,6 @@ const (
 	VIRTUAL  AccessType = "VIRTUAL"
 )
 
-type AccessFilters struct {
-	Provider  ProviderType
-	Location  string
-	Bandwidth int
-	Type      AccessType
-}
-
 func (at AccessType) String() string {
 	return string(at)
 }
