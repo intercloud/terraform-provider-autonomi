@@ -34,8 +34,10 @@ data "autonomi_access_products" "access" {
 
 ### Read-Only
 
-- `facet_distribution` (Attributes) The **facet_distribution** attribute provides an overview of the distribution of various facets within the access products returned by the Meilisearch query.
-This attribute allows you to analyze the frequency of different categories or attributes in the search results. (see [below for nested schema](#nestedatt--facet_distribution))
+- `facet_distribution` (Attributes) The **facet_distribution** attribute provides an overview of the distribution of 
+facets within the access products returned by the Meilisearch query.
+This attribute allows you to analyze the frequency of different categories or attributes in the search results.
+(see [below for nested schema](#nestedatt--facet_distribution))
 - `hits` (Attributes List) The **hits** attribute contains the list of cloud products returned by the Meilisearch query.
 Each hit represents an access product that matches the specified search criteria. (see [below for nested schema](#nestedatt--hits))
 

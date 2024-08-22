@@ -42,12 +42,15 @@ data "autonomi_cloud_products" "clouds" {
 
 ### Optional
 
-- `filters` (Attributes List) List of filters: [cspName, cspRegion, cspCity, location, bandwidth, provider] (see [below for nested schema](#nestedatt--filters))
+- `filters` (Attributes List) List of filters:
+[cspName, cspRegion, cspCity, location, bandwidth, provider] (see [below for nested schema](#nestedatt--filters))
 
 ### Read-Only
 
-- `facet_distribution` (Attributes) The **facet_distribution** attribute provides an overview of the distribution of various facets within the cloud products returned by the Meilisearch query.
-This attribute allows you to analyze the frequency of different categories or attributes in the search results. (see [below for nested schema](#nestedatt--facet_distribution))
+- `facet_distribution` (Attributes) The **facet_distribution** attribute provides an overview of
+the distribution of various facets within the cloud products returned by the Meilisearch query.
+This attribute allows you to analyze the frequency of different categories or attributes in the search results.
+(see [below for nested schema](#nestedatt--facet_distribution))
 - `hits` (Attributes List) The **hits** attribute contains the list of cloud products returned by the Meilisearch query.
 Each hit represents a cloud product that matches the specified search criteria. (see [below for nested schema](#nestedatt--hits))
 
