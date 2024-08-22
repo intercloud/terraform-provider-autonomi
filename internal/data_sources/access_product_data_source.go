@@ -34,13 +34,12 @@ type accessHits struct {
 type accessFacetDistributionDataSourceModel struct {
 	Bandwidth map[string]int `tfsdk:"bandwidth"`
 	Location  map[string]int `tfsdk:"location"`
-	Provider  map[string]int `tfsdk:"provider"` // @TODO hardcoded Intercloud
-	Type      map[string]int `tfsdk:"type"`     // @TODO hardcoded Physical
+	Provider  map[string]int `tfsdk:"provider"`
+	Type      map[string]int `tfsdk:"type"`
 }
 
 type accessProductDataSourceModel struct {
-	Location          types.String                            `tfsdk:"location"`
-	Bandwidth         types.Int64                             `tfsdk:"bandwidth"`
+	Filters           []filter                                `tfsdk:"filters"`
 	Hits              []accessHits                            `tfsdk:"hits"`
 	FacetDistribution *accessFacetDistributionDataSourceModel `tfsdk:"facet_distribution"`
 }
@@ -64,13 +63,23 @@ func (d *accessProductDataSource) Metadata(_ context.Context, req datasource.Met
 func (d *accessProductDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"location": schema.StringAttribute{
-				MarkdownDescription: "Name of the Location: expected values are [...]",
+			"filters": schema.ListNestedAttribute{
+				MarkdownDescription: "List of filters: [location, bandwidth]",
 				Optional:            true,
-			},
-			"bandwidth": schema.Int64Attribute{
-				MarkdownDescription: "Name of the Provider: expected values are [50, 100, 110, 500, 1000, 5000, 10000]",
-				Optional:            true,
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"name": schema.StringAttribute{
+							Optional: true,
+						},
+						"operator": schema.StringAttribute{
+							Optional: true,
+						},
+						"values": schema.ListAttribute{
+							ElementType: types.StringType,
+							Optional:    true,
+						},
+					},
+				},
 			},
 			"hits": schema.ListNestedAttribute{
 				MarkdownDescription: "The **hits** attribute contains the list of cloud products returned by the Meilisearch query. Each hit represents an access product that matches the specified search criteria.",
@@ -137,28 +146,16 @@ func (d *accessProductDataSource) Read(ctx context.Context, req datasource.ReadR
 		return
 	}
 
-	filters := models.AccessFilters{
-		Provider:  models.INTERCLOUD,
-		Location:  data.Location.ValueString(),
-		Bandwidth: int(data.Bandwidth.ValueInt64()),
-		Type:      models.PHYSICAL,
-	}
-
 	// Create the filter string dynamically
-	var filterStrings []string
-
-	if filters.Provider != "" {
-		filterStrings = append(filterStrings, fmt.Sprintf("provider = \"%s\"", filters.Provider))
+	filterStrings := []string{
+		fmt.Sprintf("%s %s \"%s\"", "provider", "=", models.INTERCLOUD),
+		fmt.Sprintf("%s %s \"%s\"", "type", "=", models.PHYSICAL),
 	}
-	if filters.Location != "" {
-		filterStrings = append(filterStrings, fmt.Sprintf("location = \"%s\"", filters.Location))
+	filtersToAdd, err := getFiltersString(data.Filters)
+	if err != nil {
+		resp.Diagnostics.AddError("error getting filters", err.Error())
 	}
-	if filters.Bandwidth != 0 {
-		filterStrings = append(filterStrings, fmt.Sprintf("bandwidth = %d", filters.Bandwidth))
-	}
-	if filters.Type != "" {
-		filterStrings = append(filterStrings, fmt.Sprintf("type = \"%s\"", filters.Type))
-	}
+	filterStrings = append(filterStrings, filtersToAdd...)
 
 	// Define the search request
 	searchRequest := &meilisearch.SearchRequest{
@@ -200,8 +197,7 @@ func (d *accessProductDataSource) Read(ctx context.Context, req datasource.ReadR
 	}
 
 	state := accessProductDataSourceModel{
-		Bandwidth: data.Bandwidth,
-		Location:  data.Location,
+		Filters: data.Filters,
 	}
 
 	// Map response body to model

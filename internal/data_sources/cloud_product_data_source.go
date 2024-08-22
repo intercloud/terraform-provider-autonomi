@@ -44,12 +44,7 @@ type cloudFacetDistributionDataSourceModel struct {
 }
 
 type cloudsProductDataSourceModel struct {
-	CSPName           types.String                           `tfsdk:"csp_name"`
-	CSPCity           types.String                           `tfsdk:"csp_city"`
-	CSPRegion         types.String                           `tfsdk:"csp_region"`
-	UnderlayProvider  types.String                           `tfsdk:"underlay_provider"`
-	Location          types.String                           `tfsdk:"location"`
-	Bandwidth         types.Int64                            `tfsdk:"bandwidth"`
+	Filters           []filter                               `tfsdk:"filters"`
 	Hits              []cloudHits                            `tfsdk:"hits"`
 	FacetDistribution *cloudFacetDistributionDataSourceModel `tfsdk:"facet_distribution"`
 }
@@ -73,29 +68,23 @@ func (d *cloudProductDataSource) Metadata(_ context.Context, req datasource.Meta
 func (d *cloudProductDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"csp_name": schema.StringAttribute{
-				MarkdownDescription: "Name of the CSP expected values are [AWS, Azure, GCP]",
+			"filters": schema.ListNestedAttribute{
+				MarkdownDescription: "List of filters: [cspName, cspRegion, cspCity, location, bandwidth, provider]",
 				Optional:            true,
-			},
-			"csp_city": schema.StringAttribute{
-				MarkdownDescription: "Name of the CSP city",
-				Optional:            true,
-			},
-			"csp_region": schema.StringAttribute{
-				MarkdownDescription: "Name of the CSP region",
-				Optional:            true,
-			},
-			"underlay_provider": schema.StringAttribute{
-				MarkdownDescription: "Name of the Provider: expected values are [Equinix, Megaport]",
-				Optional:            true,
-			},
-			"location": schema.StringAttribute{
-				MarkdownDescription: "Name of the Location: expected values are [...]",
-				Optional:            true,
-			},
-			"bandwidth": schema.Int64Attribute{
-				MarkdownDescription: "Name of the Provider: expected values are [50, 100, 110, 500, 1000, 5000, 10000]",
-				Optional:            true,
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"name": schema.StringAttribute{
+							Optional: true,
+						},
+						"operator": schema.StringAttribute{
+							Optional: true,
+						},
+						"values": schema.ListAttribute{
+							ElementType: types.StringType,
+							Optional:    true,
+						},
+					},
+				},
 			},
 			"hits": schema.ListNestedAttribute{
 				MarkdownDescription: "The **hits** attribute contains the list of cloud products returned by the Meilisearch query. Each hit represents a cloud product that matches the specified search criteria.",
@@ -165,38 +154,14 @@ func (d *cloudProductDataSource) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 
-	filters := models.CloudFilters{
-		CSPName:   data.CSPName.ValueString(),
-		Provider:  models.ProviderType(data.UnderlayProvider.ValueString()),
-		Location:  data.Location.ValueString(),
-		Bandwidth: int(data.Bandwidth.ValueInt64()),
-	}
-
-	// Create the filter string dynamically
-	var filterStrings []string
-
-	if filters.CSPName != "" {
-		filterStrings = append(filterStrings, fmt.Sprintf("cspName = \"%s\"", filters.CSPName))
-	}
-	if filters.CSPCity != "" {
-		filterStrings = append(filterStrings, fmt.Sprintf("cspCity = \"%s\"", filters.CSPName))
-	}
-	if filters.CSPRegion != "" {
-		filterStrings = append(filterStrings, fmt.Sprintf("cspRegion = \"%s\"", filters.CSPName))
-	}
-	if filters.Provider != "" {
-		filterStrings = append(filterStrings, fmt.Sprintf("provider = \"%s\"", filters.Provider))
-	}
-	if filters.Location != "" {
-		filterStrings = append(filterStrings, fmt.Sprintf("location = \"%s\"", filters.Location))
-	}
-	if filters.Bandwidth != 0 {
-		filterStrings = append(filterStrings, fmt.Sprintf("bandwidth = %d", filters.Bandwidth))
+	filtersStrings, err := getFiltersString(data.Filters)
+	if err != nil {
+		resp.Diagnostics.AddError("error getting filters", err.Error())
 	}
 
 	// Define the search request
 	searchRequest := &meilisearch.SearchRequest{
-		Filter: filterStrings,
+		Filter: filtersStrings,
 		Facets: []string{
 			"cspName",
 			"cspRegion",
@@ -236,12 +201,7 @@ func (d *cloudProductDataSource) Read(ctx context.Context, req datasource.ReadRe
 	}
 
 	state := cloudsProductDataSourceModel{
-		CSPName:          data.CSPName,
-		CSPCity:          data.CSPCity,
-		CSPRegion:        data.CSPRegion,
-		UnderlayProvider: data.UnderlayProvider,
-		Bandwidth:        data.Bandwidth,
-		Location:         data.Location,
+		Filters: data.Filters,
 	}
 
 	// Map response body to model

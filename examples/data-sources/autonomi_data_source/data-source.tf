@@ -1,20 +1,62 @@
 data "autonomi_cloud_products" "clouds" {
-  csp_name = var.csp_name
-  csp_region = var.csp_region
-  csp_city = var.csp_city
-  underlay_provider = var.underlay_provider
-  location = var.location
-  bandwidth = var.bandwidth
+  filters = [
+      {
+        name    = "cspName"
+        operator = "="
+        values   = ["AWS"]
+      },
+      {
+        name     = "cspRegion"
+        operator = "="
+        values   = ["eu-central-1"]
+      },
+          {
+        name    = "cspCity"
+        operator = "="
+        values   = ["Frankfurt"]
+      },    {
+        name    = "provider"
+        operator = "="
+        values   = ["EQUINIX"]
+      },    {
+        name    = "bandwidth"
+        operator = "TO"
+        values   = ["100", "500"]
+      },
+    ]
 } 
 
 data "autonomi_transport_products" "transports" {
-  underlay_provider = var.underlay_provider
-  location = var.location
-  location_to = var.location_to
-  bandwidth = var.bandwidth
+  filters = [
+      {
+        name    = "locationTo"
+        operator = "IN"
+        values   = ["EQUINIX FR5", "EQUINIX LD5"]
+      },
+      {
+        name     = "location"
+        operator = "IN"
+        values   = ["EQUINIX FR5", "EQUINIX LD5"]
+      },
+      {
+        name    = "bandwidth"
+        operator = "TO"
+        values   = ["100", "500"]
+      },
+    ]
 }
 
 data "autonomi_access_products" "access" {
-  location = var.location
-  bandwidth = var.bandwidth
+  filters = [
+    {
+      name     = "location"
+      operator = "IN"
+      values   = ["EQUINIX FR5", "EQUINIX LD5"]
+    },
+    {
+      name    = "bandwidth"
+      operator = "TO"
+      values   = ["100", "500"]
+    },
+  ]
 } 

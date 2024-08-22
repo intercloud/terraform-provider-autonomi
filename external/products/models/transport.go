@@ -9,7 +9,8 @@ type TransportFilters struct {
 
 type TransportProduct struct {
 	Product
-	LocationTo string `json:"locationTo"`
+	LocationTo         string `json:"locationTo"`
+	LocationToUnderlay string `json:"locationToUnderlay"`
 }
 
 type TransportFacetDistribution struct {
