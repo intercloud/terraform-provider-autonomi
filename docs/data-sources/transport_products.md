@@ -8,8 +8,14 @@ description: |-
 
 # autonomi_transport_products (Data Source)
 
+```terraform
 data "autonomi_transport_products" "transports" {
   filters = [
+      {
+        name    = "provider"
+        operator = "="
+        values   = ["EQUINIX"]
+      },
       {
         name    = "locationTo"
         operator = "IN"
@@ -27,6 +33,7 @@ data "autonomi_transport_products" "transports" {
       },
     ]
 }
+```
 
 ## Schema
 

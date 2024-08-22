@@ -37,6 +37,11 @@ const (
 	ToFilterType           FilterType = "TO"
 )
 
+var ErrWrongOperator = fmt.Errorf(
+	"wrong operator, try: \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\"",
+	EqualFilterType, NotEqualFilterType, AboveFilterType, AboveOrEqualFilterType, LessFilterType, LessOrEqualFilterType, InFilterType, ToFilterType,
+)
+
 func getFiltersString(filters []filter) ([]string, error) {
 	filterStrings := []string{}
 	for _, filter := range filters {
@@ -60,13 +65,10 @@ func getFiltersString(filters []filter) ([]string, error) {
 				value := filter.Values.Elements()[0].String()
 				filterStrings = append(filterStrings, fmt.Sprintf("%s %s %s", filter.Name.ValueString(), filter.Operator.ValueString(), value))
 			} else {
-				return nil, errors.New("errors values: must contain only one value")
+				return nil, errors.New("errors values: must contain one value")
 			}
 		default:
-			return nil, fmt.Errorf(
-				"wrong operator, try: \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\"",
-				EqualFilterType, NotEqualFilterType, AboveFilterType, AboveOrEqualFilterType, LessFilterType, LessOrEqualFilterType, InFilterType, ToFilterType,
-			)
+			return nil, ErrWrongOperator
 		}
 	}
 	return filterStrings, nil

@@ -8,6 +8,7 @@ description: |-
 
 # autonomi_cloud_products (Data Source)
 
+```terraform
 data "autonomi_cloud_products" "clouds" {
   filters = [
       {
@@ -35,6 +36,7 @@ data "autonomi_cloud_products" "clouds" {
       },
     ]
 } 
+```
 
 ## Schema
 
