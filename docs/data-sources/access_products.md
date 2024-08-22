@@ -34,7 +34,7 @@ data "autonomi_access_products" "access" {
 
 ### Read-Only
 
-- `facet_distribution` (Attributes) The **facet_distribution** attribute provides an overview of the distribution of 
+- `facet_distribution` (Attributes) The **facet_distribution** attribute provides an overview of the distribution of
 facets within the access products returned by the Meilisearch query.
 This attribute allows you to analyze the frequency of different categories or attributes in the search results.
 (see [below for nested schema](#nestedatt--facet_distribution))

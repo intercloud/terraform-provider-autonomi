@@ -63,7 +63,6 @@ Optional:
 - `operator` (String)
 - `values` (List of String)
 
-
 <a id="nestedatt--facet_distribution"></a>
 ### Nested Schema for `facet_distribution`
 
