@@ -34,13 +34,11 @@ type accessHits struct {
 type accessFacetDistributionDataSourceModel struct {
 	Bandwidth map[string]int `tfsdk:"bandwidth"`
 	Location  map[string]int `tfsdk:"location"`
-	Provider  map[string]int `tfsdk:"provider"` // @TODO hardcoded Intercloud
-	Type      map[string]int `tfsdk:"type"`     // @TODO hardcoded Physical
+	Provider  map[string]int `tfsdk:"provider"`
+	Type      map[string]int `tfsdk:"type"`
 }
 
 type accessProductDataSourceModel struct {
-	Location          types.String                            `tfsdk:"location"`
-	Bandwidth         types.Int64                             `tfsdk:"bandwidth"`
 	Filters           []filter                                `tfsdk:"filters"`
 	Hits              []accessHits                            `tfsdk:"hits"`
 	FacetDistribution *accessFacetDistributionDataSourceModel `tfsdk:"facet_distribution"`
@@ -66,7 +64,7 @@ func (d *accessProductDataSource) Schema(_ context.Context, _ datasource.SchemaR
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"filters": schema.ListNestedAttribute{
-				MarkdownDescription: "List of filters",
+				MarkdownDescription: "List of filters: [location, bandwidth]",
 				Optional:            true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
@@ -82,14 +80,6 @@ func (d *accessProductDataSource) Schema(_ context.Context, _ datasource.SchemaR
 						},
 					},
 				},
-			},
-			"location": schema.StringAttribute{
-				MarkdownDescription: "Name of the Location: expected values are [...]",
-				Optional:            true,
-			},
-			"bandwidth": schema.Int64Attribute{
-				MarkdownDescription: "Name of the Provider: expected values are [50, 100, 110, 500, 1000, 5000, 10000]",
-				Optional:            true,
 			},
 			"hits": schema.ListNestedAttribute{
 				MarkdownDescription: "The **hits** attribute contains the list of cloud products returned by the Meilisearch query. Each hit represents an access product that matches the specified search criteria.",
@@ -163,7 +153,7 @@ func (d *accessProductDataSource) Read(ctx context.Context, req datasource.ReadR
 	}
 	filtersToAdd, err := getFiltersString(data.Filters)
 	if err != nil {
-		resp.Diagnostics.AddError(err.Error(), "")
+		resp.Diagnostics.AddError("error getting filters", err.Error())
 	}
 	filterStrings = append(filterStrings, filtersToAdd...)
 
@@ -207,8 +197,7 @@ func (d *accessProductDataSource) Read(ctx context.Context, req datasource.ReadR
 	}
 
 	state := accessProductDataSourceModel{
-		Bandwidth: data.Bandwidth,
-		Location:  data.Location,
+		Filters: data.Filters,
 	}
 
 	// Map response body to model

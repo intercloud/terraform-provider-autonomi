@@ -24,6 +24,7 @@ type transportHits struct {
 	Provider           types.String  `tfsdk:"provider"`
 	Duration           types.Int64   `tfsdk:"duration"`
 	Location           types.String  `tfsdk:"location"`
+	LocationUnderlay   types.String  `tfsdk:"location_underlay"`
 	Bandwidth          types.Int64   `tfsdk:"bandwidth"`
 	Date               types.String  `tfsdk:"date"`
 	PriceNRC           types.Float64 `tfsdk:"price_nrc"`
@@ -43,10 +44,7 @@ type transportFacetDistributionDataSourceModel struct {
 }
 
 type transportsProductDataSourceModel struct {
-	UnderlayProvider  types.String                               `tfsdk:"underlay_provider"`
-	Location          types.String                               `tfsdk:"location"`
-	LocationTo        types.String                               `tfsdk:"location_to"`
-	Bandwidth         types.Int64                                `tfsdk:"bandwidth"`
+	Filters           []filter                                   `tfsdk:"filters"`
 	Hits              []transportHits                            `tfsdk:"hits"`
 	FacetDistribution *transportFacetDistributionDataSourceModel `tfsdk:"facet_distribution"`
 }
@@ -70,21 +68,23 @@ func (d *transportProductDataSource) Metadata(_ context.Context, req datasource.
 func (d *transportProductDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"underlay_provider": schema.StringAttribute{
-				MarkdownDescription: "Name of the Provider: expected values are [Equinix, Megaport]",
+			"filters": schema.ListNestedAttribute{
+				MarkdownDescription: "List of filters: [location, locationTo, bandwidth, provider]",
 				Optional:            true,
-			},
-			"location": schema.StringAttribute{
-				MarkdownDescription: "Name of the first Location: expected values are [...]",
-				Optional:            true,
-			},
-			"location_to": schema.StringAttribute{
-				MarkdownDescription: "Name of the second Location: expected values are [...]",
-				Optional:            true,
-			},
-			"bandwidth": schema.Int64Attribute{
-				MarkdownDescription: "Name of the Provider: expected values are [50, 100, 110, 500, 1000, 5000, 10000]",
-				Optional:            true,
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"name": schema.StringAttribute{
+							Optional: true,
+						},
+						"operator": schema.StringAttribute{
+							Optional: true,
+						},
+						"values": schema.ListAttribute{
+							ElementType: types.StringType,
+							Optional:    true,
+						},
+					},
+				},
 			},
 			"hits": schema.ListNestedAttribute{
 				MarkdownDescription: "The **hits** attribute contains the list of transport products returned by the Meilisearch query. Each hit represents a transport product that matches the specified search criteria.",
@@ -154,32 +154,14 @@ func (d *transportProductDataSource) Read(ctx context.Context, req datasource.Re
 		return
 	}
 
-	filters := models.TransportFilters{
-		Provider:   data.UnderlayProvider.ValueString(),
-		Location:   data.Location.ValueString(),
-		LocationTo: data.LocationTo.ValueString(),
-		Bandwidth:  int(data.Bandwidth.ValueInt64()),
-	}
-
-	// Create the filter string dynamically
-	var filterStrings []string
-
-	if filters.Provider != "" {
-		filterStrings = append(filterStrings, fmt.Sprintf("provider = \"%s\"", filters.Provider))
-	}
-	if filters.Location != "" {
-		filterStrings = append(filterStrings, fmt.Sprintf("location = \"%s\"", filters.Location))
-	}
-	if filters.LocationTo != "" {
-		filterStrings = append(filterStrings, fmt.Sprintf("locationTo = \"%s\"", filters.LocationTo))
-	}
-	if filters.Bandwidth != 0 {
-		filterStrings = append(filterStrings, fmt.Sprintf("bandwidth = %d", filters.Bandwidth))
+	filtersStrings, err := getFiltersString(data.Filters)
+	if err != nil {
+		resp.Diagnostics.AddError("error getting filters", err.Error())
 	}
 
 	// Define the search request
 	searchRequest := &meilisearch.SearchRequest{
-		Filter: filterStrings,
+		Filter: filtersStrings,
 		Facets: []string{
 			"location",
 			"locationTo",
@@ -217,26 +199,25 @@ func (d *transportProductDataSource) Read(ctx context.Context, req datasource.Re
 	}
 
 	state := transportsProductDataSourceModel{
-		UnderlayProvider: data.UnderlayProvider,
-		Location:         data.Location,
-		LocationTo:       data.LocationTo,
-		Bandwidth:        data.Bandwidth,
+		Filters: data.Filters,
 	}
 
 	// Map response body to model
 	for _, cp := range transportProducts.Hits {
 		transportProductState := transportHits{
-			ID:         types.Int64Value(int64(cp.ID)),
-			Provider:   types.StringValue(cp.Provider),
-			Location:   types.StringValue(cp.Location),
-			Bandwidth:  types.Int64Value(int64(cp.Bandwidth)),
-			Date:       types.StringValue(cp.Date),
-			PriceNRC:   types.Float64Value(float64(cp.PriceNRC)),
-			PriceMRC:   types.Float64Value(float64(cp.PriceMRC)),
-			CostNRC:    types.Float64Value(float64(cp.CostNRC)),
-			CostMRC:    types.Float64Value(float64(cp.CostMRC)),
-			SKU:        types.StringValue(cp.SKU),
-			LocationTo: types.StringValue(cp.LocationTo),
+			ID:                 types.Int64Value(int64(cp.ID)),
+			Provider:           types.StringValue(cp.Provider),
+			Location:           types.StringValue(cp.Location),
+			LocationUnderlay:   types.StringValue(cp.LocationUnderlay),
+			Bandwidth:          types.Int64Value(int64(cp.Bandwidth)),
+			Date:               types.StringValue(cp.Date),
+			PriceNRC:           types.Float64Value(float64(cp.PriceNRC)),
+			PriceMRC:           types.Float64Value(float64(cp.PriceMRC)),
+			CostNRC:            types.Float64Value(float64(cp.CostNRC)),
+			CostMRC:            types.Float64Value(float64(cp.CostMRC)),
+			SKU:                types.StringValue(cp.SKU),
+			LocationTo:         types.StringValue(cp.LocationTo),
+			LocationToUnderlay: types.StringValue(cp.LocationToUnderlay),
 		}
 		state.Hits = append(state.Hits, transportProductState)
 	}
