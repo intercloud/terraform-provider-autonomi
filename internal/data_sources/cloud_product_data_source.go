@@ -45,6 +45,7 @@ type cloudFacetDistributionDataSourceModel struct {
 
 type cloudsProductDataSourceModel struct {
 	Filters           []filter                               `tfsdk:"filters"`
+	Sort              []sort                                 `tfsdk:"sort"`
 	Hits              []cloudHits                            `tfsdk:"hits"`
 	FacetDistribution *cloudFacetDistributionDataSourceModel `tfsdk:"facet_distribution"`
 }
@@ -82,6 +83,20 @@ func (d *cloudProductDataSource) Schema(_ context.Context, _ datasource.SchemaRe
 						"values": schema.ListAttribute{
 							ElementType: types.StringType,
 							Optional:    true,
+						},
+					},
+				},
+			},
+			"sort": schema.ListNestedAttribute{
+				MarkdownDescription: "List of sort: [cspName, cspRegion, cspCity, location, bandwidth, provider, priceNrc, priceMrc, costNrc, costMrc]",
+				Optional:            true,
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"name": schema.StringAttribute{
+							Optional: true,
+						},
+						"value": schema.StringAttribute{
+							Optional: true,
 						},
 					},
 				},
@@ -202,6 +217,7 @@ func (d *cloudProductDataSource) Read(ctx context.Context, req datasource.ReadRe
 
 	state := cloudsProductDataSourceModel{
 		Filters: data.Filters,
+		Sort:    data.Sort,
 	}
 
 	// Map response body to model

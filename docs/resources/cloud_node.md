@@ -53,6 +53,7 @@ Required:
 
 - `sku` (String) ID of the product
 
+
 <a id="nestedatt--provider_config"></a>
 ### Nested Schema for `provider_config`
 

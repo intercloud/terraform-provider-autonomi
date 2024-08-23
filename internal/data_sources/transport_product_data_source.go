@@ -45,6 +45,7 @@ type transportFacetDistributionDataSourceModel struct {
 
 type transportsProductDataSourceModel struct {
 	Filters           []filter                                   `tfsdk:"filters"`
+	Sort              []sort                                     `tfsdk:"sort"`
 	Hits              []transportHits                            `tfsdk:"hits"`
 	FacetDistribution *transportFacetDistributionDataSourceModel `tfsdk:"facet_distribution"`
 }
@@ -82,6 +83,20 @@ func (d *transportProductDataSource) Schema(_ context.Context, _ datasource.Sche
 						"values": schema.ListAttribute{
 							ElementType: types.StringType,
 							Optional:    true,
+						},
+					},
+				},
+			},
+			"sort": schema.ListNestedAttribute{
+				MarkdownDescription: "List of sort: [location, locationTo, bandwidth, provider, priceNrc, priceMrc, costNrc, costMrc]",
+				Optional:            true,
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"name": schema.StringAttribute{
+							Optional: true,
+						},
+						"value": schema.StringAttribute{
+							Optional: true,
 						},
 					},
 				},
@@ -158,10 +173,15 @@ func (d *transportProductDataSource) Read(ctx context.Context, req datasource.Re
 	if err != nil {
 		resp.Diagnostics.AddError("error getting filters", err.Error())
 	}
+	sortStrings := getSortString(data.Sort)
+	if err != nil {
+		resp.Diagnostics.AddError("error getting sort", err.Error())
+	}
 
 	// Define the search request
 	searchRequest := &meilisearch.SearchRequest{
 		Filter: filtersStrings,
+		Sort:   sortStrings,
 		Facets: []string{
 			"location",
 			"locationTo",
@@ -200,6 +220,7 @@ func (d *transportProductDataSource) Read(ctx context.Context, req datasource.Re
 
 	state := transportsProductDataSourceModel{
 		Filters: data.Filters,
+		Sort:    data.Sort,
 	}
 
 	// Map response body to model

@@ -40,6 +40,7 @@ type accessFacetDistributionDataSourceModel struct {
 
 type accessProductDataSourceModel struct {
 	Filters           []filter                                `tfsdk:"filters"`
+	Sort              []sort                                  `tfsdk:"sort"`
 	Hits              []accessHits                            `tfsdk:"hits"`
 	FacetDistribution *accessFacetDistributionDataSourceModel `tfsdk:"facet_distribution"`
 }
@@ -77,6 +78,20 @@ func (d *accessProductDataSource) Schema(_ context.Context, _ datasource.SchemaR
 						"values": schema.ListAttribute{
 							ElementType: types.StringType,
 							Optional:    true,
+						},
+					},
+				},
+			},
+			"sort": schema.ListNestedAttribute{
+				MarkdownDescription: "List of sort: [location, bandwidth, priceNrc, priceMrc, costNrc, costMrc]",
+				Optional:            true,
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"name": schema.StringAttribute{
+							Optional: true,
+						},
+						"value": schema.StringAttribute{
+							Optional: true,
 						},
 					},
 				},
@@ -198,6 +213,7 @@ func (d *accessProductDataSource) Read(ctx context.Context, req datasource.ReadR
 
 	state := accessProductDataSourceModel{
 		Filters: data.Filters,
+		Sort:    data.Sort,
 	}
 
 	// Map response body to model

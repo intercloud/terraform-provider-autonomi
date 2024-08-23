@@ -22,6 +22,16 @@ data "autonomi_access_products" "access" {
       values   = ["100", "500"]
     },
   ]
+  sort = [
+    {
+      name     = "priceMrc"
+      value   = "asc"
+    },
+    {
+      name    = "bandwidth"
+      value   = "desc"
+    },
+  ]
 } 
 ```
 
@@ -31,15 +41,12 @@ data "autonomi_access_products" "access" {
 ### Optional
 
 - `filters` (Attributes List) List of filters: [location, bandwidth] (see [below for nested schema](#nestedatt--filters))
+- `sort` (Attributes List) List of sort: [location, bandwidth, priceNrc, priceMrc, costNrc, costMrc] (see [below for nested schema](#nestedatt--sort))
 
 ### Read-Only
 
-- `facet_distribution` (Attributes) The **facet_distribution** attribute provides an overview of the distribution of
-facets within the access products returned by the Meilisearch query.
-This attribute allows you to analyze the frequency of different categories or attributes in the search results.
-(see [below for nested schema](#nestedatt--facet_distribution))
-- `hits` (Attributes List) The **hits** attribute contains the list of cloud products returned by the Meilisearch query.
-Each hit represents an access product that matches the specified search criteria. (see [below for nested schema](#nestedatt--hits))
+- `facet_distribution` (Attributes) The **facet_distribution** attribute provides an overview of the distribution of various facets within the access products returned by the Meilisearch query. This attribute allows you to analyze the frequency of different categories or attributes in the search results. (see [below for nested schema](#nestedatt--facet_distribution))
+- `hits` (Attributes List) The **hits** attribute contains the list of cloud products returned by the Meilisearch query. Each hit represents an access product that matches the specified search criteria. (see [below for nested schema](#nestedatt--hits))
 
 <a id="nestedatt--filters"></a>
 ### Nested Schema for `filters`
@@ -50,6 +57,16 @@ Optional:
 - `operator` (String)
 - `values` (List of String)
 
+
+<a id="nestedatt--sort"></a>
+### Nested Schema for `sort`
+
+Optional:
+
+- `name` (String)
+- `value` (String)
+
+
 <a id="nestedatt--facet_distribution"></a>
 ### Nested Schema for `facet_distribution`
 
@@ -59,6 +76,7 @@ Read-Only:
 - `location` (Map of Number)
 - `provider` (Map of Number)
 - `type` (Map of Number)
+
 
 <a id="nestedatt--hits"></a>
 ### Nested Schema for `hits`

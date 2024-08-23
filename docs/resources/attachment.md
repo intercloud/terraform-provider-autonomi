@@ -6,7 +6,7 @@ description: |-
   
 ---
 
-# autonomi_attachment (Resource)`
+# autonomi_attachment (Resource)
 
 ```terraform
 resource "autonomi_attachment" "attachment"{
@@ -27,8 +27,7 @@ resource "autonomi_attachment" "attachment"{
 
 ### Read-Only
 
-- `administrative_state` (String) Administrative state of the attachment [creation_pending, creation_proceed,
-creation_error, deployed, delete_pending, delete_proceed, delete_error]
+- `administrative_state` (String) Administrative state of the attachment [creation_pending, creation_proceed, creation_error, deployed, delete_pending, delete_proceed, delete_error]
 - `created_at` (String) Creation date of the attachment
 - `id` (String) ID of the attachment, set after creation
 - `side` (String) Direction of the attachment
