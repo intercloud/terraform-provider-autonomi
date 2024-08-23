@@ -55,15 +55,15 @@ data "autonomi_cloud_products" "clouds" {
 
 - `filters` (Attributes List) List of filters: [cspName, cspRegion, cspCity, location, bandwidth, provider] (see [below for nested schema](#nestedatt--filters))
 - `sort` (Attributes List) List of sort: [cspName, cspRegion, cspCity, location, bandwidth, provider,
-					priceNrc, priceMrc, costNrc, costMrc] (see [below for nested schema](#nestedatt--sort))
+priceNrc, priceMrc, costNrc, costMrc] (see [below for nested schema](#nestedatt--sort))
 
 ### Read-Only
 
 - `facet_distribution` (Attributes) The **facet_distribution** attribute provides an overview of the distribution of various facets
-				within the cloud products returned by the Meilisearch query. This attribute allows you to analyze the frequency of
-				different categories or attributes in the search results. (see [below for nested schema](#nestedatt--facet_distribution))
+within the cloud products returned by the Meilisearch query. This attribute allows you to analyze the frequency of
+different categories or attributes in the search results. (see [below for nested schema](#nestedatt--facet_distribution))
 - `hits` (Attributes List) The **hits** attribute contains the list of cloud products returned by the Meilisearch query.
-					Each hit represents a cloud product that matches the specified search criteria. (see [below for nested schema](#nestedatt--hits))
+Each hit represents a cloud product that matches the specified search criteria. (see [below for nested schema](#nestedatt--hits))
 
 <a id="nestedatt--filters"></a>
 ### Nested Schema for `filters`
@@ -74,7 +74,6 @@ Optional:
 - `operator` (String)
 - `values` (List of String)
 
-
 <a id="nestedatt--sort"></a>
 ### Nested Schema for `sort`
 
@@ -82,7 +81,6 @@ Optional:
 
 - `name` (String)
 - `value` (String)
-
 
 <a id="nestedatt--facet_distribution"></a>
 ### Nested Schema for `facet_distribution`
@@ -95,7 +93,6 @@ Read-Only:
 - `csp_region` (Map of Number)
 - `location` (Map of Number)
 - `provider` (Map of Number)
-
 
 <a id="nestedatt--hits"></a>
 ### Nested Schema for `hits`

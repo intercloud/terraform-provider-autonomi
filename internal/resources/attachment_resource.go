@@ -101,7 +101,7 @@ func (r *attachmentResource) Schema(_ context.Context, _ resource.SchemaRequest,
 			},
 			"administrative_state": schema.StringAttribute{
 				MarkdownDescription: `Administrative state of the attachment [creation_pending, creation_proceed, creation_error,
-					deployed, delete_pending, delete_proceed, delete_error]`,
+deployed, delete_pending, delete_proceed, delete_error]`,
 				Computed: true,
 			},
 			"side": schema.StringAttribute{

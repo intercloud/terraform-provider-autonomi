@@ -89,7 +89,7 @@ func (d *transportProductDataSource) Schema(_ context.Context, _ datasource.Sche
 			},
 			"sort": schema.ListNestedAttribute{
 				MarkdownDescription: `List of sort: [location, locationTo, bandwidth, provider,
-					priceNrc, priceMrc, costNrc, costMrc]`,
+priceNrc, priceMrc, costNrc, costMrc]`,
 				Optional: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
@@ -104,7 +104,7 @@ func (d *transportProductDataSource) Schema(_ context.Context, _ datasource.Sche
 			},
 			"hits": schema.ListNestedAttribute{
 				MarkdownDescription: `The **hits** attribute contains the list of transport products returned by the Meilisearch query.
-					Each hit represents a transport product that matches the specified search criteria.`,
+Each hit represents a transport product that matches the specified search criteria.`,
 				Computed: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
@@ -127,8 +127,8 @@ func (d *transportProductDataSource) Schema(_ context.Context, _ datasource.Sche
 			},
 			"facet_distribution": schema.SingleNestedAttribute{
 				MarkdownDescription: `The **facet_distribution** attribute provides an overview of the distribution of various facets
-					within the transport products returned by the Meilisearch query. This attribute allows you to analyze the frequency
-					of different categories or attributes in the search results.`,
+within the transport products returned by the Meilisearch query. This attribute allows you to analyze the frequency
+of different categories or attributes in the search results.`,
 				Computed: true,
 				Attributes: map[string]schema.Attribute{
 					"provider":    int64MapAttr,

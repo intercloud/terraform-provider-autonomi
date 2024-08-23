@@ -8,8 +8,6 @@ description: |-
 
 # autonomi Provider
 
-
-
 ## Example Usage
 
 ```terraform
