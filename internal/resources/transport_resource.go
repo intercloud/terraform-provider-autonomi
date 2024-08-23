@@ -118,8 +118,9 @@ func (r *transportResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 				},
 			},
 			"administrative_state": schema.StringAttribute{
-				MarkdownDescription: "Administrative state of the transport [creation_pending, creation_proceed, creation_error, deployed, delete_pending, delete_proceed, delete_error]",
-				Computed:            true,
+				MarkdownDescription: `Administrative state of the transport [creation_pending, creation_proceed, creation_error,
+					deployed, delete_pending, delete_proceed, delete_error]`,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},

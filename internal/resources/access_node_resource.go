@@ -107,8 +107,9 @@ func (r *accessNodeResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				Required:            true,
 			},
 			"administrative_state": schema.StringAttribute{
-				MarkdownDescription: "Administrative state of the access node [creation_pending, creation_proceed, creation_error, deployed, delete_pending, delete_proceed, delete_error]",
-				Computed:            true,
+				MarkdownDescription: `Administrative state of the access node [creation_pending, creation_proceed, creation_error,
+					deployed, delete_pending, delete_proceed, delete_error]`,
+				Computed: true,
 			},
 			"product": schema.SingleNestedAttribute{
 				Required: true,

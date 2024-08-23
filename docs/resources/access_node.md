@@ -33,7 +33,8 @@ resource "autonomi_access_node" "access_node" {
 
 ### Read-Only
 
-- `administrative_state` (String) Administrative state of the access node [creation_pending, creation_proceed, creation_error, deployed, delete_pending, delete_proceed, delete_error]
+- `administrative_state` (String) Administrative state of the access node [creation_pending, creation_proceed, creation_error,
+					deployed, delete_pending, delete_proceed, delete_error]
 - `created_at` (String) Creation date of the access node
 - `deployed_at` (String) Deployment date of the access node
 - `id` (String) ID of the access node, set after creation
