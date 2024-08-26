@@ -1,0 +1,150 @@
+name: continuous-deployment
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  NODE_VERSION: 22.6.0
+  GO_VERSION: v1.22.0
+  GOLANGCI_LINT_VERSION: v1.59
+  GOPRIVATE: github.com/intercloud
+  TF_VERSION: 1.9.0
+  TF_MODULE_PATH: examples/autonomi
+
+jobs:
+  markdown-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: set up node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: install markdownlint-cli
+        run: npm install -g markdownlint-cli
+      - name: markdownlint
+        run: markdownlint '**/*.md'
+
+  go-mod-tidy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      - name: set up gitconfig
+        uses: ./.github/actions/setup-gitconfig
+        with:
+          ORG_GITHUB_TOKEN: ${{ secrets.ORG_GITHUB_TOKEN }}
+      - name: go mod tidy
+        run: go mod tidy
+
+  golangci-lint:
+    runs-on: ubuntu-latest
+    needs:
+      - go-mod-tidy
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: ${{ env.GOLANGCI_LINT_VERSION }}
+          args: './...'
+
+  go-test:
+    runs-on: ubuntu-latest
+    needs:
+      - golangci-lint
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      - name: go test
+        run: go test ./... -v
+
+  release:
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      - name: import gpg key
+        id: import_gpg
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.PASSPHRASE }}
+      - name: go releaser check
+        uses: goreleaser/goreleaser-action@v6.0.0
+        with:
+          version: latest
+          args: check
+      - name: go releaser
+        uses: goreleaser/goreleaser-action@v6.0.0
+        with:
+          version: latest
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
+
+  tf-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v4
+      - name: set up terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+      - name: terraform init
+        working-directory: ${{ env.TF_MODULE_PATH }}
+        run: terraform init
+      - name: terraform validate
+        working-directory: ${{ env.TF_MODULE_PATH }}
+        run: terraform validate
+
+  tf-plan:
+    runs-on: ubuntu-latest
+    needs:
+      - tf-validate
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: set up terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+      - name: terraform plan
+        working-directory: ${{ env.TF_MODULE_PATH }}
+        run: terraform plan -out=tfplan
+        env:
+          TF_VAR_pat_token: ${{ secrets.TF_VAR_PAT_TOKEN }}
+          TF_VAR_aws_account_id: ${{ secrets.TF_VAR_AWS_ACCOUNT_ID }}
