@@ -129,7 +129,7 @@ func (r *attachmentResource) Create(ctx context.Context, req resource.CreateRequ
 	}
 
 	// Create new attachment
-	attachment, err := r.client.CreateAttachment(ctx, payload, plan.WorkspaceID.ValueString(), autonomisdk.WithAdministrativeState(models.AdministrativeStateDeployed))
+	attachment, err := r.client.CreateAttachment(ctx, payload, plan.WorkspaceID.ValueString(), autonomisdk.WithWaitUntilElementDeployed())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating attachment",
@@ -212,7 +212,7 @@ func (r *attachmentResource) Delete(ctx context.Context, req resource.DeleteRequ
 	}
 
 	// Delete existing attachment
-	_, err := r.client.DeleteAttachment(ctx, state.WorkspaceID.ValueString(), state.ID.ValueString())
+	_, err := r.client.DeleteAttachment(ctx, state.WorkspaceID.ValueString(), state.ID.ValueString(), autonomisdk.WithWaitUntilElementUndeployed())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Deleting attachment",
