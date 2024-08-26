@@ -20,6 +20,11 @@ type filter struct {
 	Values   types.List   `tfsdk:"values"`
 }
 
+type sort struct {
+	Name  types.String `tfsdk:"name"`
+	Value types.String `tfsdk:"value"`
+}
+
 type FilterType string
 
 func (ft FilterType) String() string {
@@ -72,4 +77,12 @@ func getFiltersString(filters []filter) ([]string, error) {
 		}
 	}
 	return filterStrings, nil
+}
+
+func getSortString(sorts []sort) []string {
+	sortStrings := []string{}
+	for _, sort := range sorts {
+		sortStrings = append(sortStrings, fmt.Sprintf("%s:%s", sort.Name.ValueString(), sort.Value.ValueString()))
+	}
+	return sortStrings
 }

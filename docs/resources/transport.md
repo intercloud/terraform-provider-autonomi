@@ -28,8 +28,8 @@ resource "autonomi_transport" "transport" {
 
 ### Read-Only
 
-- `administrative_state` (String) Administrative state of the transport [creation_pending,
-creation_proceed, creation_error, deployed, delete_pending, delete_proceed, delete_error]
+- `administrative_state` (String) Administrative state of the transport [creation_pending, creation_proceed, creation_error,
+deployed, delete_pending, delete_proceed, delete_error]
 - `connection_id` (String) Connection ID created and returned by the cloud provider
 - `created_at` (String) Creation date of the transport
 - `deployed_at` (String) Deployment date of the transport

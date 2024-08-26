@@ -8,8 +8,6 @@ description: |-
 
 # autonomi_cloud_node (Resource)
 
-## Example Usage
-
 ```terraform
 resource "autonomi_cloud_node" "cloud_node" {
   name = "Node name"
@@ -35,8 +33,8 @@ resource "autonomi_cloud_node" "cloud_node" {
 
 ### Read-Only
 
-- `administrative_state` (String) Administrative state of the cloud node [creation_pending, creation_proceed,
-   creation_error, deployed, delete_pending, delete_proceed, delete_error]
+- `administrative_state` (String) Administrative state of the cloud node [creation_pending, creation_proceed, creation_error,
+deployed, delete_pending, delete_proceed, delete_error]
 - `connection_id` (String) Connection ID created and returned by the cloud provider
 - `created_at` (String) Creation date of the cloud node
 - `deployed_at` (String) Deployment date of the cloud node

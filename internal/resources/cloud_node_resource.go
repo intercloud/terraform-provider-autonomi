@@ -117,8 +117,9 @@ func (r *cloudNodeResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 				Required:            true,
 			},
 			"administrative_state": schema.StringAttribute{
-				MarkdownDescription: "Administrative state of the cloud node [creation_pending, creation_proceed, creation_error, deployed, delete_pending, delete_proceed, delete_error]",
-				Computed:            true,
+				MarkdownDescription: `Administrative state of the cloud node [creation_pending, creation_proceed, creation_error,
+deployed, delete_pending, delete_proceed, delete_error]`,
+				Computed: true,
 			},
 			"type": schema.StringAttribute{
 				MarkdownDescription: "Type of the node [cloud]",

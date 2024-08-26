@@ -45,6 +45,7 @@ type cloudFacetDistributionDataSourceModel struct {
 
 type cloudsProductDataSourceModel struct {
 	Filters           []filter                               `tfsdk:"filters"`
+	Sort              []sort                                 `tfsdk:"sort"`
 	Hits              []cloudHits                            `tfsdk:"hits"`
 	FacetDistribution *cloudFacetDistributionDataSourceModel `tfsdk:"facet_distribution"`
 }
@@ -86,9 +87,25 @@ func (d *cloudProductDataSource) Schema(_ context.Context, _ datasource.SchemaRe
 					},
 				},
 			},
+			"sort": schema.ListNestedAttribute{
+				MarkdownDescription: `List of sort: [cspName, cspRegion, cspCity, location, bandwidth, provider,
+priceNrc, priceMrc, costNrc, costMrc]`,
+				Optional: true,
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"name": schema.StringAttribute{
+							Optional: true,
+						},
+						"value": schema.StringAttribute{
+							Optional: true,
+						},
+					},
+				},
+			},
 			"hits": schema.ListNestedAttribute{
-				MarkdownDescription: "The **hits** attribute contains the list of cloud products returned by the Meilisearch query. Each hit represents a cloud product that matches the specified search criteria.",
-				Computed:            true,
+				MarkdownDescription: `The **hits** attribute contains the list of cloud products returned by the Meilisearch query.
+Each hit represents a cloud product that matches the specified search criteria.`,
+				Computed: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"id":        schema.Int64Attribute{Computed: true},
@@ -107,8 +124,10 @@ func (d *cloudProductDataSource) Schema(_ context.Context, _ datasource.SchemaRe
 				},
 			},
 			"facet_distribution": schema.SingleNestedAttribute{
-				MarkdownDescription: "The **facet_distribution** attribute provides an overview of the distribution of various facets within the cloud products returned by the Meilisearch query. This attribute allows you to analyze the frequency of different categories or attributes in the search results.",
-				Computed:            true,
+				MarkdownDescription: `The **facet_distribution** attribute provides an overview of the distribution of various facets
+within the cloud products returned by the Meilisearch query. This attribute allows you to analyze the frequency of
+different categories or attributes in the search results.`,
+				Computed: true,
 				Attributes: map[string]schema.Attribute{
 					"bandwidth":  int64MapAttr,
 					"csp_city":   int64MapAttr,
@@ -202,6 +221,7 @@ func (d *cloudProductDataSource) Read(ctx context.Context, req datasource.ReadRe
 
 	state := cloudsProductDataSourceModel{
 		Filters: data.Filters,
+		Sort:    data.Sort,
 	}
 
 	// Map response body to model

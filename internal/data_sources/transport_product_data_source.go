@@ -45,6 +45,7 @@ type transportFacetDistributionDataSourceModel struct {
 
 type transportsProductDataSourceModel struct {
 	Filters           []filter                                   `tfsdk:"filters"`
+	Sort              []sort                                     `tfsdk:"sort"`
 	Hits              []transportHits                            `tfsdk:"hits"`
 	FacetDistribution *transportFacetDistributionDataSourceModel `tfsdk:"facet_distribution"`
 }
@@ -86,9 +87,25 @@ func (d *transportProductDataSource) Schema(_ context.Context, _ datasource.Sche
 					},
 				},
 			},
+			"sort": schema.ListNestedAttribute{
+				MarkdownDescription: `List of sort: [location, locationTo, bandwidth, provider,
+priceNrc, priceMrc, costNrc, costMrc]`,
+				Optional: true,
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"name": schema.StringAttribute{
+							Optional: true,
+						},
+						"value": schema.StringAttribute{
+							Optional: true,
+						},
+					},
+				},
+			},
 			"hits": schema.ListNestedAttribute{
-				MarkdownDescription: "The **hits** attribute contains the list of transport products returned by the Meilisearch query. Each hit represents a transport product that matches the specified search criteria.",
-				Computed:            true,
+				MarkdownDescription: `The **hits** attribute contains the list of transport products returned by the Meilisearch query.
+Each hit represents a transport product that matches the specified search criteria.`,
+				Computed: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"id":                   schema.Int64Attribute{Computed: true},
@@ -109,8 +126,10 @@ func (d *transportProductDataSource) Schema(_ context.Context, _ datasource.Sche
 				},
 			},
 			"facet_distribution": schema.SingleNestedAttribute{
-				MarkdownDescription: "The **facet_distribution** attribute provides an overview of the distribution of various facets within the transport products returned by the Meilisearch query. This attribute allows you to analyze the frequency of different categories or attributes in the search results.",
-				Computed:            true,
+				MarkdownDescription: `The **facet_distribution** attribute provides an overview of the distribution of various facets
+within the transport products returned by the Meilisearch query. This attribute allows you to analyze the frequency
+of different categories or attributes in the search results.`,
+				Computed: true,
 				Attributes: map[string]schema.Attribute{
 					"provider":    int64MapAttr,
 					"bandwidth":   int64MapAttr,
@@ -158,10 +177,15 @@ func (d *transportProductDataSource) Read(ctx context.Context, req datasource.Re
 	if err != nil {
 		resp.Diagnostics.AddError("error getting filters", err.Error())
 	}
+	sortStrings := getSortString(data.Sort)
+	if err != nil {
+		resp.Diagnostics.AddError("error getting sort", err.Error())
+	}
 
 	// Define the search request
 	searchRequest := &meilisearch.SearchRequest{
 		Filter: filtersStrings,
+		Sort:   sortStrings,
 		Facets: []string{
 			"location",
 			"locationTo",
@@ -200,6 +224,7 @@ func (d *transportProductDataSource) Read(ctx context.Context, req datasource.Re
 
 	state := transportsProductDataSourceModel{
 		Filters: data.Filters,
+		Sort:    data.Sort,
 	}
 
 	// Map response body to model
