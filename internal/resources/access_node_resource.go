@@ -163,7 +163,7 @@ func (r *accessNodeResource) Create(ctx context.Context, req resource.CreateRequ
 	}
 
 	// Create new node
-	node, err := r.client.CreateNode(ctx, payload, plan.WorkspaceID.ValueString(), autonomisdk.WithAdministrativeState(models.AdministrativeStateDeployed))
+	node, err := r.client.CreateNode(ctx, payload, plan.WorkspaceID.ValueString(), autonomisdk.WithWaitUntilElementDeployed())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating node",
@@ -286,7 +286,7 @@ func (r *accessNodeResource) Delete(ctx context.Context, req resource.DeleteRequ
 	}
 
 	// Delete existing node
-	_, err := r.client.DeleteNode(ctx, state.WorkspaceID.ValueString(), state.ID.ValueString(), autonomisdk.WithAdministrativeState(models.AdministrativeStateDeleted))
+	_, err := r.client.DeleteNode(ctx, state.WorkspaceID.ValueString(), state.ID.ValueString(), autonomisdk.WithWaitUntilElementUndeployed())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Deleting node",

@@ -185,7 +185,7 @@ func (r *transportResource) Create(ctx context.Context, req resource.CreateReque
 	}
 
 	// Create new transport
-	transport, err := r.client.CreateTransport(ctx, payload, plan.WorkspaceID.ValueString(), autonomisdk.WithAdministrativeState(models.AdministrativeStateDeployed))
+	transport, err := r.client.CreateTransport(ctx, payload, plan.WorkspaceID.ValueString(), autonomisdk.WithWaitUntilElementDeployed())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating transport",
@@ -350,7 +350,7 @@ func (r *transportResource) Delete(ctx context.Context, req resource.DeleteReque
 	}
 
 	// Delete existing node
-	_, err := r.client.DeleteTransport(ctx, state.WorkspaceID.ValueString(), state.ID.ValueString(), autonomisdk.WithAdministrativeState(models.AdministrativeStateDeleted))
+	_, err := r.client.DeleteTransport(ctx, state.WorkspaceID.ValueString(), state.ID.ValueString(), autonomisdk.WithWaitUntilElementUndeployed())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Deleting transport",
