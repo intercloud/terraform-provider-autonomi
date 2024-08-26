@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"net/http"
 	"net/url"
+	"os"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -63,10 +64,10 @@ func (p *autonomiProvider) Schema(_ context.Context, _ provider.SchemaRequest, r
 				Description:         "A boolean variable indicating whether the terms and conditions have been accepted. Must be set to 'true' to run the provider",
 			},
 			"personal_access_token": schema.StringAttribute{
-				MarkdownDescription: "Personal Access Token (PAT) to authenticate through Autonomi",
-				Required:            true,
+				MarkdownDescription: "Personal Access Token (PAT) to authenticate through Autonomi API. This token can be obtained from the Autonomi service and is required to access and manage resources via the API. Can be set as variable or in environment as AUTONOMI_PAT",
+				Optional:            true,
 				Sensitive:           true,
-				Description:         "The Personal Access Token (PAT) used to authenticate with the Autonomi API. This token can be obtained from the Autonomi service and is required to access and manage resources via the API.",
+				Description:         "The Personal Access Token (PAT) used to authenticate with the Autonomi API. This token can be obtained from the Autonomi service and is required to access and manage resources via the API. Can be set as variable or in environment as AUTONOMI_PAT",
 			},
 			"host_url": schema.StringAttribute{
 				Required:    true,
@@ -102,6 +103,8 @@ func (p *autonomiProvider) Configure(ctx context.Context, req provider.Configure
 	}
 	if !config.PAT.IsNull() {
 		personal_access_token = config.PAT.ValueString()
+	} else {
+		personal_access_token = os.Getenv("AUTONOMI_PAT")
 	}
 	if !config.HostURL.IsNull() {
 		host_url = config.HostURL.ValueString()

@@ -14,7 +14,8 @@ description: |-
 provider "autonomi" {
   host_url = var.host_url
   terms_and_conditions = true
-  personal_access_token = var.pat_token
+  catalog_url = var.catalog_url
+  personal_access_token = var.personal_access_token
 }
 ```
 
@@ -25,5 +26,10 @@ provider "autonomi" {
 
 - `catalog_url` (String, Sensitive) The url to interact with autonomi's catalog
 - `host_url` (String, Sensitive) The host url to interact with autonomi API
-- `personal_access_token` (String, Sensitive) Personal Access Token (PAT) to authenticate through Autonomi
 - `terms_and_conditions` (Boolean) Terms and conditions
+
+### Optional
+
+- `personal_access_token` (String, Sensitive) Personal Access Token (PAT) to authenticate through Autonomi API.
+This token can be obtained from the Autonomi service and is required to access and manage resources via the API.
+Can be set as variable or in environment as AUTONOMI_PAT
