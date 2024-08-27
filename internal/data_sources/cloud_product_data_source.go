@@ -177,10 +177,12 @@ func (d *cloudProductDataSource) Read(ctx context.Context, req datasource.ReadRe
 	if err != nil {
 		resp.Diagnostics.AddError("error getting filters", err.Error())
 	}
+	sortStrings := getSortString(data.Sort)
 
 	// Define the search request
 	searchRequest := &meilisearch.SearchRequest{
 		Filter: filtersStrings,
+		Sort:   sortStrings,
 		Facets: []string{
 			"cspName",
 			"cspRegion",
