@@ -35,8 +35,6 @@ type autonomiProvider struct {
 type autonomiProviderModel struct {
 	TermsAndConditions types.Bool   `tfsdk:"terms_and_conditions"`
 	PAT                types.String `tfsdk:"personal_access_token"`
-	HostURL            types.String `tfsdk:"host_url"`    // @TODO remove when it will be published
-	CatalogURL         types.String `tfsdk:"catalog_url"` // @TODO remove when it will be published
 }
 
 // New is a helper function to simplify provider server and testing implementation.
@@ -69,16 +67,6 @@ func (p *autonomiProvider) Schema(_ context.Context, _ provider.SchemaRequest, r
 				Sensitive:           true,
 				Description:         "The Personal Access Token (PAT) used to authenticate with the Autonomi API. This token can be obtained from the Autonomi service and is required to access and manage resources via the API. Can be set as variable or in environment as AUTONOMI_PAT",
 			},
-			"host_url": schema.StringAttribute{
-				Required:    true,
-				Sensitive:   true,
-				Description: "The host url to interact with autonomi API",
-			},
-			"catalog_url": schema.StringAttribute{
-				Required:    true,
-				Sensitive:   true,
-				Description: "The url to interact with autonomi's catalog",
-			},
 		},
 	}
 }
@@ -106,12 +94,8 @@ func (p *autonomiProvider) Configure(ctx context.Context, req provider.Configure
 	} else {
 		personal_access_token = os.Getenv("AUTONOMI_PAT")
 	}
-	if !config.HostURL.IsNull() {
-		host_url = config.HostURL.ValueString()
-	}
-	if !config.CatalogURL.IsNull() {
-		catalog_url = config.CatalogURL.ValueString()
-	}
+	host_url = os.Getenv("AUTONOMI_HOST_URL")
+	catalog_url = os.Getenv("AUTONOMI_CATALOG_URL")
 
 	// If any of the expected configurations are missing, return
 	// errors with provider-specific guidance.
