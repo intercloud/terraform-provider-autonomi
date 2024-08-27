@@ -25,7 +25,7 @@ resource "autonomi_workspace" "workspace_test" {
 
 ## Authentication and Configuration
 
-Configuration for the AWS Provider can be derived from several sources, which are applied in the following order:
+Configuration for the Autonomi Provider can be derived from several sources, which are applied in the following order:
 
 1. Parameters in the provider configuration
 2. Environment variables
