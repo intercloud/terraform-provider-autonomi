@@ -4,7 +4,7 @@ Use the Autonomi provider to interact with the many resources supported by Auton
 
 ## Example Usage
 
-```
+```terraform
 terraform {
   required_providers {
     autonomi = {
@@ -32,11 +32,12 @@ Configuration for the AWS Provider can be derived from several sources, which ar
 
 ### Provider configuration
 
-Access can be allowed by adding a personal access token to the autonomi provider block. The [terms and conditions](https://docs.autonomi-platform.com/docs/legal) must be accepted to be able to deploy resources.
+Access can be allowed by adding a personal access token to the autonomi provider block.
+The [terms and conditions](https://docs.autonomi-platform.com/docs/legal) must be accepted to be able to deploy resources.
 
 Usage:
 
-```
+```terraform
 provider "autonomi" {
   terms_and_conditions = true
   personal_access_token = "my-personnal-access-token"
@@ -44,17 +45,18 @@ provider "autonomi" {
 ```
 
 ### Environment Variables
+
 Access can be allowed by using the `AUTONOMI_PAT` environment variables. For a local usage the variables `AUTONOMI_HOST_URL` and `AUTONOMI_CATALOG_URL` must also be set.
 
 For example:
 
-```
+```terraform
 provider "autonomi" {
   terms_and_conditions = true
 }
 ```
 
-```
+```bash
 export AUTONOMI_PAT=<my-personal-access-token>
 export AUTONOMI_HOST_URL=<autonomi-api-url>
 export AUTONOMI_CATALOG_URL=<autonomi-catalog-url>
