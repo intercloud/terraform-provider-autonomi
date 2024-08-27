@@ -178,9 +178,6 @@ func (d *transportProductDataSource) Read(ctx context.Context, req datasource.Re
 		resp.Diagnostics.AddError("error getting filters", err.Error())
 	}
 	sortStrings := getSortString(data.Sort)
-	if err != nil {
-		resp.Diagnostics.AddError("error getting sort", err.Error())
-	}
 
 	// Define the search request
 	searchRequest := &meilisearch.SearchRequest{

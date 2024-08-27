@@ -174,10 +174,12 @@ func (d *accessProductDataSource) Read(ctx context.Context, req datasource.ReadR
 		resp.Diagnostics.AddError("error getting filters", err.Error())
 	}
 	filterStrings = append(filterStrings, filtersToAdd...)
+	sortStrings := getSortString(data.Sort)
 
 	// Define the search request
 	searchRequest := &meilisearch.SearchRequest{
 		Filter: filterStrings,
+		Sort:   sortStrings,
 		Facets: []string{
 			"location",
 			"bandwidth",
