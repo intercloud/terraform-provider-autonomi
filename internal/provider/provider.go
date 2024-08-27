@@ -181,6 +181,7 @@ func (p *autonomiProvider) DataSources(_ context.Context) []func() datasource.Da
 	return []func() datasource.DataSource{
 		datasources.NewCloudProductDataSource,
 		datasources.NewTransportProductDataSource,
+		datasources.NewAccessProductsDataSource,
 		datasources.NewAccessProductDataSource,
 	}
 }

@@ -46,7 +46,7 @@ data "autonomi_transport_products" "transports" {
     ]
 }
 
-data "autonomi_access_products" "access" {
+data "autonomi_access_products" "list_access_products" {
   filters = [
     {
       name     = "location"
@@ -60,3 +60,19 @@ data "autonomi_access_products" "access" {
     },
   ]
 } 
+
+data "autonomi_access_product" "one_product" {
+  cheapest = true
+  filters = [
+    {
+      name     = "location"
+      operator = "="
+      values   = ["EQUINIX FR5"]
+    },
+    {
+      name    = "bandwidth"
+      operator = "="
+      values   = ["100"]
+    },
+  ]
+}
