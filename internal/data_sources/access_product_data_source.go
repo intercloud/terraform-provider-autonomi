@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sort"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -16,32 +17,10 @@ type accessProductDataSource struct {
 	client *meilisearch.Client
 }
 
-type accessHits struct {
-	ID        types.Int64   `tfsdk:"id"`
-	Provider  types.String  `tfsdk:"provider"`
-	Duration  types.Int64   `tfsdk:"duration"`
-	Location  types.String  `tfsdk:"location"`
-	Bandwidth types.Int64   `tfsdk:"bandwidth"`
-	Date      types.String  `tfsdk:"date"`
-	PriceNRC  types.Float64 `tfsdk:"price_nrc"`
-	PriceMRC  types.Float64 `tfsdk:"price_mrc"`
-	CostNRC   types.Float64 `tfsdk:"cost_nrc"`
-	CostMRC   types.Float64 `tfsdk:"cost_mrc"`
-	SKU       types.String  `tfsdk:"sku"`
-	Type      types.String  `tfsdk:"type"`
-}
-
-type accessFacetDistributionDataSourceModel struct {
-	Bandwidth map[string]int `tfsdk:"bandwidth"`
-	Location  map[string]int `tfsdk:"location"`
-	Provider  map[string]int `tfsdk:"provider"`
-	Type      map[string]int `tfsdk:"type"`
-}
-
 type accessProductDataSourceModel struct {
+	Cheapest          bool                                    `tfsdk:"cheapest"`
 	Filters           []filter                                `tfsdk:"filters"`
-	Sort              []sort                                  `tfsdk:"sort"`
-	Hits              []accessHits                            `tfsdk:"hits"`
+	Hit               *accessHits                             `tfsdk:"hit"`
 	FacetDistribution *accessFacetDistributionDataSourceModel `tfsdk:"facet_distribution"`
 }
 
@@ -57,15 +36,19 @@ func NewAccessProductDataSource() datasource.DataSource {
 
 // Metadata returns the data source type name.
 func (d *accessProductDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_access_products"
+	resp.TypeName = req.ProviderTypeName + "_access_product"
 }
 
 // Schema defines the schema for the data source.
 func (d *accessProductDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"cheapest": schema.BoolAttribute{
+				MarkdownDescription: "To ensure only one hit is returned we advise to set at true",
+				Optional:            true,
+			},
 			"filters": schema.ListNestedAttribute{
-				MarkdownDescription: "List of filters: [location, bandwidth]",
+				MarkdownDescription: "List of filters: [location, bandwidth].",
 				Optional:            true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
@@ -82,39 +65,24 @@ func (d *accessProductDataSource) Schema(_ context.Context, _ datasource.SchemaR
 					},
 				},
 			},
-			"sort": schema.ListNestedAttribute{
-				MarkdownDescription: "List of sort: [location, bandwidth, priceNrc, priceMrc, costNrc, costMrc]",
-				Optional:            true,
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"name": schema.StringAttribute{
-							Optional: true,
-						},
-						"value": schema.StringAttribute{
-							Optional: true,
-						},
-					},
-				},
-			},
-			"hits": schema.ListNestedAttribute{
-				MarkdownDescription: `The **hits** attribute contains the list of cloud products returned by the Meilisearch query.
-Each hit represents an access product that matches the specified search criteria.`,
+			"hit": schema.SingleNestedAttribute{
+				MarkdownDescription: `The **hit** attribute contains the access products returned by the Meilisearch query.
+				Each hit represents an access product that matches the specified search criteria.
+				If no hit is returned, an error will be returned`,
 				Computed: true,
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"id":        schema.Int64Attribute{Computed: true},
-						"provider":  schema.StringAttribute{Computed: true},
-						"duration":  schema.Int64Attribute{Computed: true},
-						"location":  schema.StringAttribute{Computed: true},
-						"bandwidth": schema.Int64Attribute{Computed: true},
-						"date":      schema.StringAttribute{Computed: true},
-						"price_nrc": schema.Int64Attribute{Computed: true},
-						"price_mrc": schema.Int64Attribute{Computed: true},
-						"cost_nrc":  schema.Int64Attribute{Computed: true},
-						"cost_mrc":  schema.Int64Attribute{Computed: true},
-						"sku":       schema.StringAttribute{Computed: true},
-						"type":      schema.StringAttribute{Computed: true},
-					},
+				Attributes: map[string]schema.Attribute{
+					"id":        schema.Int64Attribute{Computed: true},
+					"provider":  schema.StringAttribute{Computed: true},
+					"duration":  schema.Int64Attribute{Computed: true},
+					"location":  schema.StringAttribute{Computed: true},
+					"bandwidth": schema.Int64Attribute{Computed: true},
+					"date":      schema.StringAttribute{Computed: true},
+					"price_nrc": schema.Int64Attribute{Computed: true},
+					"price_mrc": schema.Int64Attribute{Computed: true},
+					"cost_nrc":  schema.Int64Attribute{Computed: true},
+					"cost_mrc":  schema.Int64Attribute{Computed: true},
+					"sku":       schema.StringAttribute{Computed: true},
+					"type":      schema.StringAttribute{Computed: true},
 				},
 			},
 			"facet_distribution": schema.SingleNestedAttribute{
@@ -205,8 +173,7 @@ func (d *accessProductDataSource) Read(ctx context.Context, req datasource.ReadR
 		return
 	}
 
-	err = json.Unmarshal(productsJSON, &accessProducts) // Unmarshal JSON into the CloudProduct slice
-	if err != nil {
+	if err := json.Unmarshal(productsJSON, &accessProducts); err != nil { // Unmarshal JSON into the AccessProduct slice
 		resp.Diagnostics.AddError(
 			"Unable to Read Autonomi Access Products",
 			err.Error(),
@@ -216,26 +183,40 @@ func (d *accessProductDataSource) Read(ctx context.Context, req datasource.ReadR
 
 	state := accessProductDataSourceModel{
 		Filters: data.Filters,
-		Sort:    data.Sort,
 	}
 
-	// Map response body to model
-	for _, ap := range accessProducts.Hits {
-		accessProductState := accessHits{
-			ID:        types.Int64Value(int64(ap.ID)),
-			Provider:  types.StringValue(ap.Provider),
-			Duration:  types.Int64Value(int64(ap.Duration)),
-			Location:  types.StringValue(ap.Location),
-			Bandwidth: types.Int64Value(int64(ap.Bandwidth)),
-			Date:      types.StringValue(ap.Date),
-			PriceNRC:  types.Float64Value(float64(ap.PriceNRC)),
-			PriceMRC:  types.Float64Value(float64(ap.PriceMRC)),
-			CostNRC:   types.Float64Value(float64(ap.CostNRC)),
-			CostMRC:   types.Float64Value(float64(ap.CostMRC)),
-			SKU:       types.StringValue(ap.SKU),
-			Type:      types.StringValue(ap.Type),
+	if accessProducts.Hits == nil {
+		resp.Diagnostics.AddError("Not hit found", "")
+		return
+	}
+
+	// If Meiliesearch return more than one hit, check if `cheapest` filter has been set.
+	// If not, an error is returned, otherwise a sort will be done to order the list by price mrc. The first entry will be returned
+	if len(accessProducts.Hits) > 1 {
+		if !data.Cheapest {
+			resp.Diagnostics.AddError("Request got more than one hit, please add filters [location, bandwidth, cheapest]", "")
+			return
 		}
-		state.Hits = append(state.Hits, accessProductState)
+		// sort slice by price mrc if cheapest=true is set
+		sort.Slice(accessProducts.Hits, func(i, j int) bool {
+			return accessProducts.Hits[i].PriceMRC < accessProducts.Hits[j].PriceMRC
+		})
+	}
+
+	ap := accessProducts.Hits[0]
+	state.Hit = &accessHits{
+		ID:        types.Int64Value(int64(ap.ID)),
+		Provider:  types.StringValue(ap.Provider),
+		Duration:  types.Int64Value(int64(ap.Duration)),
+		Location:  types.StringValue(ap.Location),
+		Bandwidth: types.Int64Value(int64(ap.Bandwidth)),
+		Date:      types.StringValue(ap.Date),
+		PriceNRC:  types.Float64Value(float64(ap.PriceNRC)),
+		PriceMRC:  types.Float64Value(float64(ap.PriceMRC)),
+		CostNRC:   types.Float64Value(float64(ap.CostNRC)),
+		CostMRC:   types.Float64Value(float64(ap.CostMRC)),
+		SKU:       types.StringValue(ap.SKU),
+		Type:      types.StringValue(ap.Type),
 	}
 
 	// Set the bandwidth map in the state

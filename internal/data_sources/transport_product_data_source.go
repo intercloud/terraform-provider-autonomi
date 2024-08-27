@@ -45,7 +45,7 @@ type transportFacetDistributionDataSourceModel struct {
 
 type transportsProductDataSourceModel struct {
 	Filters           []filter                                   `tfsdk:"filters"`
-	Sort              []sort                                     `tfsdk:"sort"`
+	Sort              []sortFacet                                `tfsdk:"sort"`
 	Hits              []transportHits                            `tfsdk:"hits"`
 	FacetDistribution *transportFacetDistributionDataSourceModel `tfsdk:"facet_distribution"`
 }

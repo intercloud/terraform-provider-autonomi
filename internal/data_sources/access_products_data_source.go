@@ -5,21 +5,18 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/intercloud/terraform-provider-autonomi/external/products/models"
-
-	"github.com/hashicorp/terraform-plugin-framework/types"
-
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/intercloud/terraform-provider-autonomi/external/products/models"
 	"github.com/meilisearch/meilisearch-go"
 )
 
-type cloudProductDataSource struct {
+type accessProductsDataSource struct {
 	client *meilisearch.Client
 }
 
-type cloudHits struct {
+type accessHits struct {
 	ID        types.Int64   `tfsdk:"id"`
 	Provider  types.String  `tfsdk:"provider"`
 	Duration  types.Int64   `tfsdk:"duration"`
@@ -31,46 +28,44 @@ type cloudHits struct {
 	CostNRC   types.Float64 `tfsdk:"cost_nrc"`
 	CostMRC   types.Float64 `tfsdk:"cost_mrc"`
 	SKU       types.String  `tfsdk:"sku"`
-	CSPName   types.String  `tfsdk:"csp_name"`
+	Type      types.String  `tfsdk:"type"`
 }
 
-type cloudFacetDistributionDataSourceModel struct {
+type accessFacetDistributionDataSourceModel struct {
 	Bandwidth map[string]int `tfsdk:"bandwidth"`
-	CSPCity   map[string]int `tfsdk:"csp_city"`
-	CSPName   map[string]int `tfsdk:"csp_name"`
-	CSPRegion map[string]int `tfsdk:"csp_region"`
 	Location  map[string]int `tfsdk:"location"`
 	Provider  map[string]int `tfsdk:"provider"`
+	Type      map[string]int `tfsdk:"type"`
 }
 
-type cloudsProductDataSourceModel struct {
-	Filters           []filter                               `tfsdk:"filters"`
-	Sort              []sortFacet                            `tfsdk:"sort"`
-	Hits              []cloudHits                            `tfsdk:"hits"`
-	FacetDistribution *cloudFacetDistributionDataSourceModel `tfsdk:"facet_distribution"`
+type accessProductsDataSourceModel struct {
+	Filters           []filter                                `tfsdk:"filters"`
+	Sort              []sortFacet                             `tfsdk:"sort"`
+	Hits              []accessHits                            `tfsdk:"hits"`
+	FacetDistribution *accessFacetDistributionDataSourceModel `tfsdk:"facet_distribution"`
 }
 
 // Ensure the implementation satisfies the expected interfaces.
 var (
-	_ datasource.DataSource              = &cloudProductDataSource{}
-	_ datasource.DataSourceWithConfigure = &cloudProductDataSource{}
+	_ datasource.DataSource              = &accessProductsDataSource{}
+	_ datasource.DataSourceWithConfigure = &accessProductsDataSource{}
 )
 
-func NewCloudProductDataSource() datasource.DataSource {
-	return &cloudProductDataSource{}
+func NewAccessProductsDataSource() datasource.DataSource {
+	return &accessProductsDataSource{}
 }
 
 // Metadata returns the data source type name.
-func (d *cloudProductDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_cloud_products"
+func (d *accessProductsDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_access_products"
 }
 
 // Schema defines the schema for the data source.
-func (d *cloudProductDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *accessProductsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"filters": schema.ListNestedAttribute{
-				MarkdownDescription: "List of filters: [cspName, cspRegion, cspCity, location, bandwidth, provider]",
+				MarkdownDescription: "List of filters: [location, bandwidth]",
 				Optional:            true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
@@ -88,9 +83,8 @@ func (d *cloudProductDataSource) Schema(_ context.Context, _ datasource.SchemaRe
 				},
 			},
 			"sort": schema.ListNestedAttribute{
-				MarkdownDescription: `List of sort: [cspName, cspRegion, cspCity, location, bandwidth, provider,
-priceNrc, priceMrc, costNrc, costMrc]`,
-				Optional: true,
+				MarkdownDescription: "List of sort: [location, bandwidth, priceNrc, priceMrc, costNrc, costMrc]",
+				Optional:            true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"name": schema.StringAttribute{
@@ -103,8 +97,8 @@ priceNrc, priceMrc, costNrc, costMrc]`,
 				},
 			},
 			"hits": schema.ListNestedAttribute{
-				MarkdownDescription: `The **hits** attribute contains the list of cloud products returned by the Meilisearch query.
-Each hit represents a cloud product that matches the specified search criteria.`,
+				MarkdownDescription: `The **hits** attribute contains the list of access products returned by the Meilisearch query.
+Each hit represents an access product that matches the specified search criteria.`,
 				Computed: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
@@ -119,22 +113,20 @@ Each hit represents a cloud product that matches the specified search criteria.`
 						"cost_nrc":  schema.Int64Attribute{Computed: true},
 						"cost_mrc":  schema.Int64Attribute{Computed: true},
 						"sku":       schema.StringAttribute{Computed: true},
-						"csp_name":  schema.StringAttribute{Computed: true},
+						"type":      schema.StringAttribute{Computed: true},
 					},
 				},
 			},
 			"facet_distribution": schema.SingleNestedAttribute{
 				MarkdownDescription: `The **facet_distribution** attribute provides an overview of the distribution of various facets
-within the cloud products returned by the Meilisearch query. This attribute allows you to analyze the frequency of
+within the access products returned by the Meilisearch query. This attribute allows you to analyze the frequency of
 different categories or attributes in the search results.`,
 				Computed: true,
 				Attributes: map[string]schema.Attribute{
-					"bandwidth":  int64MapAttr,
-					"csp_city":   int64MapAttr,
-					"csp_name":   int64MapAttr,
-					"csp_region": int64MapAttr,
-					"location":   int64MapAttr,
-					"provider":   int64MapAttr,
+					"bandwidth": int64MapAttr,
+					"location":  int64MapAttr,
+					"provider":  int64MapAttr,
+					"type":      int64MapAttr,
 				},
 			},
 		},
@@ -142,7 +134,7 @@ different categories or attributes in the search results.`,
 }
 
 // Configure adds the provider configured client to the data source.
-func (d *cloudProductDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *accessProductsDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	// Add a nil check when handling ProviderData because Terraform
 	// sets that data after it calls the ConfigureProvider RPC.
 	if req.ProviderData == nil {
@@ -163,9 +155,8 @@ func (d *cloudProductDataSource) Configure(_ context.Context, req datasource.Con
 }
 
 // Read refreshes the Terraform state with the latest data.
-func (d *cloudProductDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-
-	var data cloudsProductDataSourceModel
+func (d *accessProductsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var data accessProductsDataSourceModel
 
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
@@ -173,86 +164,87 @@ func (d *cloudProductDataSource) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 
-	filtersStrings, err := getFiltersString(data.Filters)
+	// Create the filter string dynamically
+	filterStrings := []string{
+		fmt.Sprintf("%s %s \"%s\"", "provider", "=", models.INTERCLOUD),
+		fmt.Sprintf("%s %s \"%s\"", "type", "=", models.PHYSICAL),
+	}
+	filtersToAdd, err := getFiltersString(data.Filters)
 	if err != nil {
 		resp.Diagnostics.AddError("error getting filters", err.Error())
 	}
+	filterStrings = append(filterStrings, filtersToAdd...)
 
 	// Define the search request
 	searchRequest := &meilisearch.SearchRequest{
-		Filter: filtersStrings,
+		Filter: filterStrings,
 		Facets: []string{
-			"cspName",
-			"cspRegion",
-			"cspCity",
 			"location",
 			"bandwidth",
 			"provider",
+			"type",
 		},
 	}
 
-	respProducts, err := d.client.Index("cloudproduct").Search("", searchRequest)
+	respProducts, err := d.client.Index("accessproduct").Search("", searchRequest)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Unable to Read Autonomi Cloud Products",
+			"Unable to Read Autonomi Access Products",
 			err.Error(),
 		)
 		return
 	}
 
-	cloudProducts := models.CloudProducts{}
+	accessProducts := models.AccessProducts{}
 	productsJSON, err := json.Marshal(respProducts) // Marshal the hits to JSON
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Unable to Read Autonomi Cloud Products",
+			"Unable to Read Autonomi Access Products",
 			err.Error(),
 		)
 		return
 	}
 
-	err = json.Unmarshal(productsJSON, &cloudProducts) // Unmarshal JSON into the CloudProduct slice
+	err = json.Unmarshal(productsJSON, &accessProducts) // Unmarshal JSON into the CloudProduct slice
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Unable to Read Autonomi Cloud Products",
+			"Unable to Read Autonomi Access Products",
 			err.Error(),
 		)
 		return
 	}
 
-	state := cloudsProductDataSourceModel{
+	state := accessProductsDataSourceModel{
 		Filters: data.Filters,
 		Sort:    data.Sort,
 	}
 
 	// Map response body to model
-	for _, cp := range cloudProducts.Hits {
-		cloudProductState := cloudHits{
-			ID:        types.Int64Value(int64(cp.ID)),
-			Provider:  types.StringValue(cp.Provider),
-			Duration:  types.Int64Value(int64(cp.Duration)),
-			Location:  types.StringValue(cp.Location),
-			Bandwidth: types.Int64Value(int64(cp.Bandwidth)),
-			Date:      types.StringValue(cp.Date),
-			PriceNRC:  types.Float64Value(float64(cp.PriceNRC)),
-			PriceMRC:  types.Float64Value(float64(cp.PriceMRC)),
-			CostNRC:   types.Float64Value(float64(cp.CostNRC)),
-			CostMRC:   types.Float64Value(float64(cp.CostMRC)),
-			SKU:       types.StringValue(cp.SKU),
-			CSPName:   types.StringValue(cp.CSPName),
+	for _, ap := range accessProducts.Hits {
+		accessProductState := accessHits{
+			ID:        types.Int64Value(int64(ap.ID)),
+			Provider:  types.StringValue(ap.Provider),
+			Duration:  types.Int64Value(int64(ap.Duration)),
+			Location:  types.StringValue(ap.Location),
+			Bandwidth: types.Int64Value(int64(ap.Bandwidth)),
+			Date:      types.StringValue(ap.Date),
+			PriceNRC:  types.Float64Value(float64(ap.PriceNRC)),
+			PriceMRC:  types.Float64Value(float64(ap.PriceMRC)),
+			CostNRC:   types.Float64Value(float64(ap.CostNRC)),
+			CostMRC:   types.Float64Value(float64(ap.CostMRC)),
+			SKU:       types.StringValue(ap.SKU),
+			Type:      types.StringValue(ap.Type),
 		}
-		state.Hits = append(state.Hits, cloudProductState)
+		state.Hits = append(state.Hits, accessProductState)
 	}
 
 	// Set the bandwidth map in the state
-	state.FacetDistribution = &cloudFacetDistributionDataSourceModel{
-		Bandwidth: cloudProducts.FacetDistribution.Bandwidth,
-		CSPCity:   cloudProducts.FacetDistribution.CSPCity,
-		CSPName:   cloudProducts.FacetDistribution.CSPName,
-		CSPRegion: cloudProducts.FacetDistribution.CSPRegion,
-		Location:  cloudProducts.FacetDistribution.Location,
-		Provider:  cloudProducts.FacetDistribution.Provider,
+	state.FacetDistribution = &accessFacetDistributionDataSourceModel{
+		Bandwidth: accessProducts.FacetDistribution.Bandwidth,
+		Location:  accessProducts.FacetDistribution.Location,
+		Provider:  accessProducts.FacetDistribution.Provider,
+		Type:      accessProducts.FacetDistribution.Type,
 	}
-
 	// Set state
 	diags := resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)

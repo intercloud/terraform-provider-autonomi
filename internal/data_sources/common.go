@@ -20,7 +20,7 @@ type filter struct {
 	Values   types.List   `tfsdk:"values"`
 }
 
-type sort struct {
+type sortFacet struct {
 	Name  types.String `tfsdk:"name"`
 	Value types.String `tfsdk:"value"`
 }
@@ -42,9 +42,11 @@ const (
 	ToFilterType           FilterType = "TO"
 )
 
-var ErrWrongOperator = fmt.Errorf(
-	"wrong operator, try: \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\"",
-	EqualFilterType, NotEqualFilterType, AboveFilterType, AboveOrEqualFilterType, LessFilterType, LessOrEqualFilterType, InFilterType, ToFilterType,
+var (
+	ErrWrongOperator = fmt.Errorf(
+		"wrong operator, try: \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\"",
+		EqualFilterType, NotEqualFilterType, AboveFilterType, AboveOrEqualFilterType, LessFilterType, LessOrEqualFilterType, InFilterType, ToFilterType,
+	)
 )
 
 func getFiltersString(filters []filter) ([]string, error) {
@@ -79,7 +81,7 @@ func getFiltersString(filters []filter) ([]string, error) {
 	return filterStrings, nil
 }
 
-func getSortString(sorts []sort) []string {
+func getSortString(sorts []sortFacet) []string {
 	sortStrings := []string{}
 	for _, sort := range sorts {
 		sortStrings = append(sortStrings, fmt.Sprintf("%s:%s", sort.Name.ValueString(), sort.Value.ValueString()))
