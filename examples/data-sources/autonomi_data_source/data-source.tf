@@ -26,6 +26,35 @@ data "autonomi_cloud_products" "clouds" {
     ]
 } 
 
+data "autonomi_cloud_product" "one_cloud_product" {
+  cheapest = true
+  filters = [
+      {
+        name    = "cspName"
+        operator = "="
+        values   = ["AWS"]
+      },
+      {
+        name     = "cspRegion"
+        operator = "="
+        values   = ["eu-central-1"]
+      },
+          {
+        name    = "cspCity"
+        operator = "="
+        values   = ["Frankfurt"]
+      },    {
+        name    = "provider"
+        operator = "="
+        values   = ["EQUINIX"]
+      },    {
+        name    = "bandwidth"
+        operator = "="
+        values   = ["100"]
+      },
+    ]
+} 
+
 data "autonomi_transport_products" "transports" {
   filters = [
       {

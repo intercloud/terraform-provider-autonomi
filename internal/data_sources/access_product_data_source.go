@@ -18,7 +18,7 @@ type accessProductDataSource struct {
 }
 
 type accessProductDataSourceModel struct {
-	Cheapest          bool                                    `tfsdk:"cheapest"`
+	Cheapest          *bool                                   `tfsdk:"cheapest"`
 	Filters           []filter                                `tfsdk:"filters"`
 	Hit               *accessHits                             `tfsdk:"hit"`
 	FacetDistribution *accessFacetDistributionDataSourceModel `tfsdk:"facet_distribution"`
@@ -181,10 +181,6 @@ func (d *accessProductDataSource) Read(ctx context.Context, req datasource.ReadR
 		return
 	}
 
-	state := accessProductDataSourceModel{
-		Filters: data.Filters,
-	}
-
 	if accessProducts.Hits == nil {
 		resp.Diagnostics.AddError("Not hit found", "")
 		return
@@ -193,14 +189,19 @@ func (d *accessProductDataSource) Read(ctx context.Context, req datasource.ReadR
 	// If Meiliesearch return more than one hit, check if `cheapest` filter has been set.
 	// If not, an error is returned, otherwise a sort will be done to order the list by price mrc. The first entry will be returned
 	if len(accessProducts.Hits) > 1 {
-		if !data.Cheapest {
-			resp.Diagnostics.AddError("Request got more than one hit, please add filters [location, bandwidth, cheapest]", "")
+		if data.Cheapest == nil || !*data.Cheapest {
+			resp.Diagnostics.AddError("Request got more than one hit, please set cheapest=true", "")
 			return
 		}
 		// sort slice by price mrc if cheapest=true is set
 		sort.Slice(accessProducts.Hits, func(i, j int) bool {
 			return accessProducts.Hits[i].PriceMRC < accessProducts.Hits[j].PriceMRC
 		})
+	}
+
+	state := accessProductDataSourceModel{
+		Cheapest: data.Cheapest,
+		Filters:  data.Filters,
 	}
 
 	ap := accessProducts.Hits[0]

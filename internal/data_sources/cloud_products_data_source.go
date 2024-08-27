@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"sort"
 
 	"github.com/intercloud/terraform-provider-autonomi/external/products/models"
 
@@ -16,40 +15,60 @@ import (
 	"github.com/meilisearch/meilisearch-go"
 )
 
-type cloudProductDataSource struct {
+type cloudProductsDataSource struct {
 	client *meilisearch.Client
 }
 
-type cloudsProductDataSourceModel struct {
-	Cheapest          *bool                                  `tfsdk:"cheapest"`
+type cloudHits struct {
+	ID        types.Int64   `tfsdk:"id"`
+	Provider  types.String  `tfsdk:"provider"`
+	Duration  types.Int64   `tfsdk:"duration"`
+	Location  types.String  `tfsdk:"location"`
+	Bandwidth types.Int64   `tfsdk:"bandwidth"`
+	Date      types.String  `tfsdk:"date"`
+	PriceNRC  types.Float64 `tfsdk:"price_nrc"`
+	PriceMRC  types.Float64 `tfsdk:"price_mrc"`
+	CostNRC   types.Float64 `tfsdk:"cost_nrc"`
+	CostMRC   types.Float64 `tfsdk:"cost_mrc"`
+	SKU       types.String  `tfsdk:"sku"`
+	CSPName   types.String  `tfsdk:"csp_name"`
+}
+
+type cloudFacetDistributionDataSourceModel struct {
+	Bandwidth map[string]int `tfsdk:"bandwidth"`
+	CSPCity   map[string]int `tfsdk:"csp_city"`
+	CSPName   map[string]int `tfsdk:"csp_name"`
+	CSPRegion map[string]int `tfsdk:"csp_region"`
+	Location  map[string]int `tfsdk:"location"`
+	Provider  map[string]int `tfsdk:"provider"`
+}
+
+type cloudsProductsDataSourceModel struct {
 	Filters           []filter                               `tfsdk:"filters"`
-	Hit               *cloudHits                             `tfsdk:"hit"`
+	Sort              []sortFacet                            `tfsdk:"sort"`
+	Hits              []cloudHits                            `tfsdk:"hits"`
 	FacetDistribution *cloudFacetDistributionDataSourceModel `tfsdk:"facet_distribution"`
 }
 
 // Ensure the implementation satisfies the expected interfaces.
 var (
-	_ datasource.DataSource              = &cloudProductDataSource{}
-	_ datasource.DataSourceWithConfigure = &cloudProductDataSource{}
+	_ datasource.DataSource              = &cloudProductsDataSource{}
+	_ datasource.DataSourceWithConfigure = &cloudProductsDataSource{}
 )
 
-func NewCloudProductDataSource() datasource.DataSource {
-	return &cloudProductDataSource{}
+func NewCloudProductsDataSource() datasource.DataSource {
+	return &cloudProductsDataSource{}
 }
 
 // Metadata returns the data source type name.
-func (d *cloudProductDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_cloud_product"
+func (d *cloudProductsDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_cloud_products"
 }
 
 // Schema defines the schema for the data source.
-func (d *cloudProductDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *cloudProductsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"cheapest": schema.BoolAttribute{
-				MarkdownDescription: "To ensure only one hit is returned we advise to set at true",
-				Optional:            true,
-			},
 			"filters": schema.ListNestedAttribute{
 				MarkdownDescription: "List of filters: [cspName, cspRegion, cspCity, location, bandwidth, provider]",
 				Optional:            true,
@@ -68,24 +87,40 @@ func (d *cloudProductDataSource) Schema(_ context.Context, _ datasource.SchemaRe
 					},
 				},
 			},
-			"hit": schema.SingleNestedAttribute{
-				MarkdownDescription: `The **hit** attribute contains the access products returned by the Meilisearch query.
-				Each hit represents a cloud product that matches the specified search criteria.
-				If no hit is returned, an error will be returned`,
+			"sort": schema.ListNestedAttribute{
+				MarkdownDescription: `List of sort: [cspName, cspRegion, cspCity, location, bandwidth, provider,
+priceNrc, priceMrc, costNrc, costMrc]`,
+				Optional: true,
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"name": schema.StringAttribute{
+							Optional: true,
+						},
+						"value": schema.StringAttribute{
+							Optional: true,
+						},
+					},
+				},
+			},
+			"hits": schema.ListNestedAttribute{
+				MarkdownDescription: `The **hits** attribute contains the list of cloud products returned by the Meilisearch query.
+Each hit represents a cloud product that matches the specified search criteria.`,
 				Computed: true,
-				Attributes: map[string]schema.Attribute{
-					"id":        schema.Int64Attribute{Computed: true},
-					"provider":  schema.StringAttribute{Computed: true},
-					"duration":  schema.Int64Attribute{Computed: true},
-					"location":  schema.StringAttribute{Computed: true},
-					"bandwidth": schema.Int64Attribute{Computed: true},
-					"date":      schema.StringAttribute{Computed: true},
-					"price_nrc": schema.Int64Attribute{Computed: true},
-					"price_mrc": schema.Int64Attribute{Computed: true},
-					"cost_nrc":  schema.Int64Attribute{Computed: true},
-					"cost_mrc":  schema.Int64Attribute{Computed: true},
-					"sku":       schema.StringAttribute{Computed: true},
-					"csp_name":  schema.StringAttribute{Computed: true},
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"id":        schema.Int64Attribute{Computed: true},
+						"provider":  schema.StringAttribute{Computed: true},
+						"duration":  schema.Int64Attribute{Computed: true},
+						"location":  schema.StringAttribute{Computed: true},
+						"bandwidth": schema.Int64Attribute{Computed: true},
+						"date":      schema.StringAttribute{Computed: true},
+						"price_nrc": schema.Int64Attribute{Computed: true},
+						"price_mrc": schema.Int64Attribute{Computed: true},
+						"cost_nrc":  schema.Int64Attribute{Computed: true},
+						"cost_mrc":  schema.Int64Attribute{Computed: true},
+						"sku":       schema.StringAttribute{Computed: true},
+						"csp_name":  schema.StringAttribute{Computed: true},
+					},
 				},
 			},
 			"facet_distribution": schema.SingleNestedAttribute{
@@ -107,7 +142,7 @@ different categories or attributes in the search results.`,
 }
 
 // Configure adds the provider configured client to the data source.
-func (d *cloudProductDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *cloudProductsDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	// Add a nil check when handling ProviderData because Terraform
 	// sets that data after it calls the ConfigureProvider RPC.
 	if req.ProviderData == nil {
@@ -128,9 +163,9 @@ func (d *cloudProductDataSource) Configure(_ context.Context, req datasource.Con
 }
 
 // Read refreshes the Terraform state with the latest data.
-func (d *cloudProductDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *cloudProductsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 
-	var data cloudsProductDataSourceModel
+	var data cloudsProductsDataSourceModel
 
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
@@ -142,10 +177,12 @@ func (d *cloudProductDataSource) Read(ctx context.Context, req datasource.ReadRe
 	if err != nil {
 		resp.Diagnostics.AddError("error getting filters", err.Error())
 	}
+	sortStrings := getSortString(data.Sort)
 
 	// Define the search request
 	searchRequest := &meilisearch.SearchRequest{
 		Filter: filtersStrings,
+		Sort:   sortStrings,
 		Facets: []string{
 			"cspName",
 			"cspRegion",
@@ -184,43 +221,28 @@ func (d *cloudProductDataSource) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 
-	if cloudProducts.Hits == nil {
-		resp.Diagnostics.AddError("Not hit found", "")
-		return
+	state := cloudsProductsDataSourceModel{
+		Filters: data.Filters,
+		Sort:    data.Sort,
 	}
 
-	// If Meiliesearch return more than one hit, check if `cheapest` filter has been set.
-	// If not, an error is returned, otherwise a sort will be done to order the list by price mrc. The first entry will be returned
-	if len(cloudProducts.Hits) > 1 {
-		if data.Cheapest == nil || !*data.Cheapest {
-			resp.Diagnostics.AddError("Request got more than one hit, please set cheapest=true", "")
-			return
+	// Map response body to model
+	for _, cp := range cloudProducts.Hits {
+		cloudProductState := cloudHits{
+			ID:        types.Int64Value(int64(cp.ID)),
+			Provider:  types.StringValue(cp.Provider),
+			Duration:  types.Int64Value(int64(cp.Duration)),
+			Location:  types.StringValue(cp.Location),
+			Bandwidth: types.Int64Value(int64(cp.Bandwidth)),
+			Date:      types.StringValue(cp.Date),
+			PriceNRC:  types.Float64Value(float64(cp.PriceNRC)),
+			PriceMRC:  types.Float64Value(float64(cp.PriceMRC)),
+			CostNRC:   types.Float64Value(float64(cp.CostNRC)),
+			CostMRC:   types.Float64Value(float64(cp.CostMRC)),
+			SKU:       types.StringValue(cp.SKU),
+			CSPName:   types.StringValue(cp.CSPName),
 		}
-		// sort slice by price mrc if cheapest=true is set
-		sort.Slice(cloudProducts.Hits, func(i, j int) bool {
-			return cloudProducts.Hits[i].PriceMRC < cloudProducts.Hits[j].PriceMRC
-		})
-	}
-
-	state := cloudsProductDataSourceModel{
-		Cheapest: data.Cheapest,
-		Filters:  data.Filters,
-	}
-
-	cp := cloudProducts.Hits[0]
-	state.Hit = &cloudHits{
-		ID:        types.Int64Value(int64(cp.ID)),
-		Provider:  types.StringValue(cp.Provider),
-		Duration:  types.Int64Value(int64(cp.Duration)),
-		Location:  types.StringValue(cp.Location),
-		Bandwidth: types.Int64Value(int64(cp.Bandwidth)),
-		Date:      types.StringValue(cp.Date),
-		PriceNRC:  types.Float64Value(float64(cp.PriceNRC)),
-		PriceMRC:  types.Float64Value(float64(cp.PriceMRC)),
-		CostNRC:   types.Float64Value(float64(cp.CostNRC)),
-		CostMRC:   types.Float64Value(float64(cp.CostMRC)),
-		SKU:       types.StringValue(cp.SKU),
-		CSPName:   types.StringValue(cp.CSPName),
+		state.Hits = append(state.Hits, cloudProductState)
 	}
 
 	// Set the bandwidth map in the state

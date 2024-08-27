@@ -179,6 +179,7 @@ func (p *autonomiProvider) Configure(ctx context.Context, req provider.Configure
 // DataSources defines the data sources implemented in the provider.
 func (p *autonomiProvider) DataSources(_ context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
+		datasources.NewCloudProductsDataSource,
 		datasources.NewCloudProductDataSource,
 		datasources.NewTransportProductDataSource,
 		datasources.NewAccessProductsDataSource,
