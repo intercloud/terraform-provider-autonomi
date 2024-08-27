@@ -12,10 +12,8 @@ description: |-
 
 ```terraform
 provider "autonomi" {
-  host_url = var.host_url
   terms_and_conditions = true
   personal_access_token = var.pat_token
-  catalog_url = var.catalog_url
 }
 ```
 
@@ -24,8 +22,6 @@ provider "autonomi" {
 
 ### Required
 
-- `catalog_url` (String, Sensitive) The url to interact with autonomi's catalog
-- `host_url` (String, Sensitive) The host url to interact with autonomi API
 - `terms_and_conditions` (Boolean) Terms and conditions
 
 ### Optional
