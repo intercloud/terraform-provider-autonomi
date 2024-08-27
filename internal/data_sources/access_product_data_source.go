@@ -68,7 +68,7 @@ func (d *accessProductDataSource) Schema(_ context.Context, _ datasource.SchemaR
 			"hit": schema.SingleNestedAttribute{
 				MarkdownDescription: `The **hit** attribute contains the access products returned by the Meilisearch query.
 				Each hit represents an access product that matches the specified search criteria.
-				If not hit is returned, an error will be returned`,
+				If no hit is returned, an error will be returned`,
 				Computed: true,
 				Attributes: map[string]schema.Attribute{
 					"id":        schema.Int64Attribute{Computed: true},
@@ -191,7 +191,7 @@ func (d *accessProductDataSource) Read(ctx context.Context, req datasource.ReadR
 	}
 
 	// If Meiliesearch return more than one hit, check if `cheapest` filter has been set.
-	// If not an error is returned, otherwise a sort will be done to order the list by price mrc. The first entry will be returned
+	// If not, an error is returned, otherwise a sort will be done to order the list by price mrc. The first entry will be returned
 	if len(accessProducts.Hits) > 1 {
 		if !data.Cheapest {
 			resp.Diagnostics.AddError("Request got more than one hit, please add filters [location, bandwidth, cheapest]", "")
