@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	autonomisdk "github.com/intercloud/autonomi-sdk"
 	"github.com/intercloud/autonomi-sdk/models"
@@ -131,19 +130,11 @@ func (r *workspaceResource) Create(ctx context.Context, req resource.CreateReque
 		return
 	}
 
-	tflog.Debug(context.Background(), "workspace created", map[string]interface{}{
-		"workspace": workspace,
-	})
-
 	// Map response body to schema and populate Computed attribute values
 	plan.ID = types.StringValue(workspace.ID.String())
 	plan.CreatedAt = types.StringValue(workspace.CreatedAt.String())
 	plan.UpdatedAt = types.StringValue(workspace.UpdatedAt.String())
 	plan.AccountID = types.StringValue(workspace.AccountID)
-
-	tflog.Debug(context.Background(), "plan updated", map[string]interface{}{
-		"plan": workspace,
-	})
 
 	// Set state to fully populated data
 	diags = resp.State.Set(ctx, plan)
