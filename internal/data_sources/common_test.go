@@ -1,7 +1,6 @@
 package datasources
 
 import (
-	"errors"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -54,7 +53,7 @@ func TestGetFiltersString(t *testing.T) {
 				},
 			},
 			expect: nil,
-			err:    errors.New("errors values: must contain one value"),
+			err:    ErrOnlyOneValue,
 		},
 		{
 			name: EqualFilterType.String() + " must fail len(values) < 1",
@@ -66,7 +65,7 @@ func TestGetFiltersString(t *testing.T) {
 				},
 			},
 			expect: nil,
-			err:    errors.New("errors values: must contain one value"),
+			err:    ErrOnlyOneValue,
 		},
 		{
 			name: ToFilterType.String(),
@@ -90,7 +89,7 @@ func TestGetFiltersString(t *testing.T) {
 				},
 			},
 			expect: nil,
-			err:    errors.New("errors values: must contain two values"),
+			err:    ErrOnlyTwoValues,
 		},
 		{
 			name: InFilterType.String(),
@@ -102,6 +101,74 @@ func TestGetFiltersString(t *testing.T) {
 				},
 			},
 			expect: []string{"location IN [\"EQUINIX FR5\",\"EQUINIX LD5\"]"},
+			err:    nil,
+		},
+		{
+			name: "transport junction",
+			filters: []filter{
+				{
+					Name:     types.StringValue("location"),
+					Operator: types.StringValue(EqualFilterType.String()),
+					Values:   getValues([]string{"EQUINIX FR5"}),
+				},
+				{
+					Name:     types.StringValue("locationTo"),
+					Operator: types.StringValue(EqualFilterType.String()),
+					Values:   getValues([]string{"EQUINIX LD5"}),
+				},
+			},
+			expect: []string{"(location = \"EQUINIX FR5\" && locationTo = \"EQUINIX LD5\") or (locationTo = \"EQUINIX FR5\" && location = \"EQUINIX LD5\")"},
+			err:    nil,
+		},
+		{
+			name: "transport junction different filter type",
+			filters: []filter{
+				{
+					Name:     types.StringValue("location"),
+					Operator: types.StringValue(InFilterType.String()),
+					Values:   getValues([]string{"EQUINIX FR5"}),
+				},
+				{
+					Name:     types.StringValue("locationTo"),
+					Operator: types.StringValue(EqualFilterType.String()),
+					Values:   getValues([]string{"EQUINIX LD5"}),
+				},
+			},
+			expect: []string{"(location = \"EQUINIX FR5\" && locationTo = \"EQUINIX LD5\") or (locationTo = \"EQUINIX FR5\" && location = \"EQUINIX LD5\")"},
+			err:    nil,
+		},
+		{
+			name: "transport junction with multiple locations bad operator",
+			filters: []filter{
+				{
+					Name:     types.StringValue("location"),
+					Operator: types.StringValue(InFilterType.String()),
+					Values:   getValues([]string{"EQUINIX FR5", "EQUINIX AM2", "EQUINIX SG1"}),
+				},
+				{
+					Name:     types.StringValue("locationTo"),
+					Operator: types.StringValue(EqualFilterType.String()),
+					Values:   getValues([]string{"EQUINIX AM2", "EQUINIX PA3"}),
+				},
+			},
+			expect: nil,
+			err:    ErrOnlyOneValue,
+		},
+		{
+			name: "transport junction with multiple locations",
+			filters: []filter{
+				{
+					Name:     types.StringValue("location"),
+					Operator: types.StringValue(InFilterType.String()),
+					Values:   getValues([]string{"EQUINIX FR5", "EQUINIX AM2", "EQUINIX SG1"}),
+				},
+				{
+					Name:     types.StringValue("locationTo"),
+					Operator: types.StringValue(InFilterType.String()),
+					Values:   getValues([]string{"EQUINIX AM2", "EQUINIX PA3"}),
+				},
+			},
+			expect: []string{"(location = \"EQUINIX FR5\" && locationTo = \"EQUINIX AM2\") or (locationTo = \"EQUINIX FR5\" && location = \"EQUINIX AM2\") or (location = \"EQUINIX FR5\" && locationTo = \"EQUINIX PA3\") or (locationTo = \"EQUINIX FR5\" && location = \"EQUINIX PA3\") or (location = \"EQUINIX AM2\" && locationTo = \"EQUINIX AM2\") or (location = \"EQUINIX AM2\" && locationTo = \"EQUINIX PA3\") or (locationTo = \"EQUINIX AM2\" && location = \"EQUINIX PA3\") or (location = \"EQUINIX SG1\" && locationTo = \"EQUINIX AM2\") or (locationTo = \"EQUINIX SG1\" && location = \"EQUINIX AM2\") or (location = \"EQUINIX SG1\" && locationTo = \"EQUINIX PA3\") or (locationTo = \"EQUINIX SG1\" && location = \"EQUINIX PA3\")"},
 			err:    nil,
 		},
 		{
