@@ -181,7 +181,7 @@ func (d *accessProductDataSource) Read(ctx context.Context, req datasource.ReadR
 		return
 	}
 
-	if accessProducts.Hits == nil {
+	if len(accessProducts.Hits) == 0 {
 		resp.Diagnostics.AddError("Not hit found", "")
 		return
 	}

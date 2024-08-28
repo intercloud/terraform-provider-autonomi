@@ -184,7 +184,7 @@ func (d *cloudProductDataSource) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 
-	if cloudProducts.Hits == nil {
+	if len(cloudProducts.Hits) == 0 {
 		resp.Diagnostics.AddError("Not hit found", "")
 		return
 	}
