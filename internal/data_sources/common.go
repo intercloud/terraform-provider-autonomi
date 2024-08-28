@@ -82,7 +82,7 @@ type filterTypeValue struct {
 	value  string
 }
 
-// build build the string Meilisearch filter.
+// build validates and builds the Meilisearch filter.
 func (fv *filterTypeValue) build() (string, error) {
 	// if the value is already built, skip the build and return the value
 	if fv.value != "" {
