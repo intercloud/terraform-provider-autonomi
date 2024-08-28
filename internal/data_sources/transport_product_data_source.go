@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sort"
 
 	"github.com/intercloud/terraform-provider-autonomi/external/products/models"
 
@@ -19,34 +20,10 @@ type transportProductDataSource struct {
 	client *meilisearch.Client
 }
 
-type transportHits struct {
-	ID                 types.Int64   `tfsdk:"id"`
-	Provider           types.String  `tfsdk:"provider"`
-	Duration           types.Int64   `tfsdk:"duration"`
-	Location           types.String  `tfsdk:"location"`
-	LocationUnderlay   types.String  `tfsdk:"location_underlay"`
-	Bandwidth          types.Int64   `tfsdk:"bandwidth"`
-	Date               types.String  `tfsdk:"date"`
-	PriceNRC           types.Float64 `tfsdk:"price_nrc"`
-	PriceMRC           types.Float64 `tfsdk:"price_mrc"`
-	CostNRC            types.Float64 `tfsdk:"cost_nrc"`
-	CostMRC            types.Float64 `tfsdk:"cost_mrc"`
-	SKU                types.String  `tfsdk:"sku"`
-	LocationTo         types.String  `tfsdk:"location_to"`
-	LocationToUnderlay types.String  `tfsdk:"location_to_underlay"`
-}
-
-type transportFacetDistributionDataSourceModel struct {
-	Bandwidth  map[string]int `tfsdk:"bandwidth"`
-	Location   map[string]int `tfsdk:"location"`
-	LocationTo map[string]int `tfsdk:"location_to"`
-	Provider   map[string]int `tfsdk:"provider"`
-}
-
-type transportsProductDataSourceModel struct {
+type transportProductDataSourceModel struct {
+	Cheapest          *bool                                      `tfsdk:"cheapest"`
 	Filters           []filter                                   `tfsdk:"filters"`
-	Sort              []sortFacet                                `tfsdk:"sort"`
-	Hits              []transportHits                            `tfsdk:"hits"`
+	Hit               *transportHits                             `tfsdk:"hit"`
 	FacetDistribution *transportFacetDistributionDataSourceModel `tfsdk:"facet_distribution"`
 }
 
@@ -62,13 +39,17 @@ func NewTransportProductDataSource() datasource.DataSource {
 
 // Metadata returns the data source type name.
 func (d *transportProductDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_transport_products"
+	resp.TypeName = req.ProviderTypeName + "_transport_product"
 }
 
 // Schema defines the schema for the data source.
 func (d *transportProductDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"cheapest": schema.BoolAttribute{
+				MarkdownDescription: "To ensure only one hit is returned we advise to set at true",
+				Optional:            true,
+			},
 			"filters": schema.ListNestedAttribute{
 				MarkdownDescription: "List of filters: [location, locationTo, bandwidth, provider]",
 				Optional:            true,
@@ -87,42 +68,25 @@ func (d *transportProductDataSource) Schema(_ context.Context, _ datasource.Sche
 					},
 				},
 			},
-			"sort": schema.ListNestedAttribute{
-				MarkdownDescription: `List of sort: [location, locationTo, bandwidth, provider,
-priceNrc, priceMrc, costNrc, costMrc]`,
-				Optional: true,
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"name": schema.StringAttribute{
-							Optional: true,
-						},
-						"value": schema.StringAttribute{
-							Optional: true,
-						},
-					},
-				},
-			},
-			"hits": schema.ListNestedAttribute{
+			"hit": schema.SingleNestedAttribute{
 				MarkdownDescription: `The **hits** attribute contains the list of transport products returned by the Meilisearch query.
 Each hit represents a transport product that matches the specified search criteria.`,
 				Computed: true,
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"id":                   schema.Int64Attribute{Computed: true},
-						"provider":             schema.StringAttribute{Computed: true},
-						"duration":             schema.Int64Attribute{Computed: true},
-						"location":             schema.StringAttribute{Computed: true},
-						"location_underlay":    schema.StringAttribute{Computed: true},
-						"location_to":          schema.StringAttribute{Computed: true},
-						"location_to_underlay": schema.StringAttribute{Computed: true},
-						"bandwidth":            schema.Int64Attribute{Computed: true},
-						"date":                 schema.StringAttribute{Computed: true},
-						"price_nrc":            schema.Int64Attribute{Computed: true},
-						"price_mrc":            schema.Int64Attribute{Computed: true},
-						"cost_nrc":             schema.Int64Attribute{Computed: true},
-						"cost_mrc":             schema.Int64Attribute{Computed: true},
-						"sku":                  schema.StringAttribute{Computed: true},
-					},
+				Attributes: map[string]schema.Attribute{
+					"id":                   schema.Int64Attribute{Computed: true},
+					"provider":             schema.StringAttribute{Computed: true},
+					"duration":             schema.Int64Attribute{Computed: true},
+					"location":             schema.StringAttribute{Computed: true},
+					"location_underlay":    schema.StringAttribute{Computed: true},
+					"location_to":          schema.StringAttribute{Computed: true},
+					"location_to_underlay": schema.StringAttribute{Computed: true},
+					"bandwidth":            schema.Int64Attribute{Computed: true},
+					"date":                 schema.StringAttribute{Computed: true},
+					"price_nrc":            schema.Int64Attribute{Computed: true},
+					"price_mrc":            schema.Int64Attribute{Computed: true},
+					"cost_nrc":             schema.Int64Attribute{Computed: true},
+					"cost_mrc":             schema.Int64Attribute{Computed: true},
+					"sku":                  schema.StringAttribute{Computed: true},
 				},
 			},
 			"facet_distribution": schema.SingleNestedAttribute{
@@ -165,7 +129,7 @@ func (d *transportProductDataSource) Configure(_ context.Context, req datasource
 // Read refreshes the Terraform state with the latest data.
 func (d *transportProductDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 
-	var data transportsProductDataSourceModel
+	var data transportProductDataSourceModel
 
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
@@ -177,12 +141,10 @@ func (d *transportProductDataSource) Read(ctx context.Context, req datasource.Re
 	if err != nil {
 		resp.Diagnostics.AddError("error getting filters", err.Error())
 	}
-	sortStrings := getSortString(data.Sort)
 
 	// Define the search request
 	searchRequest := &meilisearch.SearchRequest{
 		Filter: filtersStrings,
-		Sort:   sortStrings,
 		Facets: []string{
 			"location",
 			"locationTo",
@@ -219,29 +181,39 @@ func (d *transportProductDataSource) Read(ctx context.Context, req datasource.Re
 		return
 	}
 
-	state := transportsProductDataSourceModel{
-		Filters: data.Filters,
-		Sort:    data.Sort,
+	// If Meiliesearch return more than one hit, check if `cheapest` filter has been set.
+	// If not, an error is returned, otherwise a sort will be done to order the list by price mrc. The first entry will be returned
+	if len(transportProducts.Hits) > 1 {
+		if data.Cheapest == nil || !*data.Cheapest {
+			resp.Diagnostics.AddError("Request got more than one hit, please set cheapest=true", "")
+			return
+		}
+		// sort slice by price mrc if cheapest=true is set
+		sort.Slice(transportProducts.Hits, func(i, j int) bool {
+			return transportProducts.Hits[i].PriceMRC < transportProducts.Hits[j].PriceMRC
+		})
 	}
 
-	// Map response body to model
-	for _, cp := range transportProducts.Hits {
-		transportProductState := transportHits{
-			ID:                 types.Int64Value(int64(cp.ID)),
-			Provider:           types.StringValue(cp.Provider),
-			Location:           types.StringValue(cp.Location),
-			LocationUnderlay:   types.StringValue(cp.LocationUnderlay),
-			Bandwidth:          types.Int64Value(int64(cp.Bandwidth)),
-			Date:               types.StringValue(cp.Date),
-			PriceNRC:           types.Float64Value(float64(cp.PriceNRC)),
-			PriceMRC:           types.Float64Value(float64(cp.PriceMRC)),
-			CostNRC:            types.Float64Value(float64(cp.CostNRC)),
-			CostMRC:            types.Float64Value(float64(cp.CostMRC)),
-			SKU:                types.StringValue(cp.SKU),
-			LocationTo:         types.StringValue(cp.LocationTo),
-			LocationToUnderlay: types.StringValue(cp.LocationToUnderlay),
-		}
-		state.Hits = append(state.Hits, transportProductState)
+	state := transportProductDataSourceModel{
+		Cheapest: data.Cheapest,
+		Filters:  data.Filters,
+	}
+
+	tp := transportProducts.Hits[0]
+	state.Hit = &transportHits{
+		ID:                 types.Int64Value(int64(tp.ID)),
+		Provider:           types.StringValue(tp.Provider),
+		Location:           types.StringValue(tp.Location),
+		LocationUnderlay:   types.StringValue(tp.LocationUnderlay),
+		Bandwidth:          types.Int64Value(int64(tp.Bandwidth)),
+		Date:               types.StringValue(tp.Date),
+		PriceNRC:           types.Float64Value(float64(tp.PriceNRC)),
+		PriceMRC:           types.Float64Value(float64(tp.PriceMRC)),
+		CostNRC:            types.Float64Value(float64(tp.CostNRC)),
+		CostMRC:            types.Float64Value(float64(tp.CostMRC)),
+		SKU:                types.StringValue(tp.SKU),
+		LocationTo:         types.StringValue(tp.LocationTo),
+		LocationToUnderlay: types.StringValue(tp.LocationToUnderlay),
 	}
 
 	// Set the bandwidth map in the state
