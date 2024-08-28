@@ -69,7 +69,7 @@ func (d *transportProductDataSource) Schema(_ context.Context, _ datasource.Sche
 				},
 			},
 			"hit": schema.SingleNestedAttribute{
-				MarkdownDescription: `The **hits** attribute contains the list of transport products returned by the Meilisearch query.
+				MarkdownDescription: `The **hit** attribute contains the transport product returned by the Meilisearch query.
 Each hit represents a transport product that matches the specified search criteria.`,
 				Computed: true,
 				Attributes: map[string]schema.Attribute{
@@ -178,6 +178,11 @@ func (d *transportProductDataSource) Read(ctx context.Context, req datasource.Re
 			"Unable to Read Autonomi Transport Products",
 			err.Error(),
 		)
+		return
+	}
+
+	if len(transportProducts.Hits) == 0 {
+		resp.Diagnostics.AddError("Not hit found", "")
 		return
 	}
 
