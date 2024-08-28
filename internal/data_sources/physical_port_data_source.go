@@ -3,6 +3,8 @@ package datasources
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -28,7 +30,7 @@ type physicalPortProduct struct {
 	SKU       types.String `tfsdk:"sku"`
 }
 
-type physicalPortTerraform struct {
+type physicalPortHits struct {
 	ID                 types.String        `tfsdk:"id"`
 	Name               types.String        `tfsdk:"name"`
 	AccountID          types.String        `tfsdk:"account_id"`
@@ -38,8 +40,9 @@ type physicalPortTerraform struct {
 	UsedVLANs          []types.Int64       `tfsdk:"used_vlans"`
 }
 
-type physicalPortTerraformModel struct {
-	Ports []physicalPortTerraform `tfsdk:"ports"`
+type physicalPortDataSourceModel struct {
+	Filters []filter           `tfsdk:"filters"`
+	Ports   []physicalPortHits `tfsdk:"ports"`
 }
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -61,9 +64,28 @@ func (d *physicalPortsDataSource) Metadata(_ context.Context, req datasource.Met
 func (d *physicalPortsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"ports": schema.ListNestedAttribute{
-				MarkdownDescription: "List of filters: [location, locationTo, bandwidth, provider]",
+			"filters": schema.ListNestedAttribute{
+				MarkdownDescription: "List of filters: [name, location, bandwidth, priceMrc, priceNrc, costMrc, costNrc]",
 				Optional:            true,
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"name": schema.StringAttribute{
+							Optional: true,
+						},
+						"operator": schema.StringAttribute{
+							Optional: true,
+						},
+						"values": schema.ListAttribute{
+							ElementType: types.StringType,
+							Optional:    true,
+						},
+					},
+				},
+			},
+			"ports": schema.ListNestedAttribute{
+				MarkdownDescription: `The **ports** attribute contains the list of physical ports available on the accountId.
+Each port represents a physical-port that matches the specified search criteria.`,
+				Optional: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						// ID attribute for the physical port
@@ -170,6 +192,13 @@ func (d *physicalPortsDataSource) Configure(_ context.Context, req datasource.Co
 
 // Read refreshes the Terraform state with the latest data.
 func (d *physicalPortsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var data physicalPortDataSourceModel
+
+	// Read Terraform configuration data into the model
+	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 	respPhysicalPorts, err := d.client.ListPort(autonomisdk.WithAdministrativeState(autonomisdkmodel.AdministrativeStateCreated))
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -179,13 +208,15 @@ func (d *physicalPortsDataSource) Read(ctx context.Context, req datasource.ReadR
 		return
 	}
 
+	filterPhysicalPort := filterObjects(*respPhysicalPorts, data.Filters)
+
 	// Create a slice to hold the state
-	physicalPortsTF := []physicalPortTerraform{}
+	physicalPortsTF := []physicalPortHits{}
 
 	// Map response body to model
-	for _, physicalPort := range *respPhysicalPorts {
+	for _, physicalPort := range filterPhysicalPort {
 		// Create a map to hold attributes of each physicalPort
-		physicalPortTF := physicalPortTerraform{
+		physicalPortTF := physicalPortHits{
 			ID:                 types.StringValue(physicalPort.ID.String()),
 			Name:               types.StringValue(physicalPort.Name),
 			AccountID:          types.StringValue(physicalPort.AccountID),
@@ -207,7 +238,7 @@ func (d *physicalPortsDataSource) Read(ctx context.Context, req datasource.ReadR
 		physicalPortsTF = append(physicalPortsTF, physicalPortTF)
 	}
 
-	state := physicalPortTerraformModel{
+	state := physicalPortDataSourceModel{
 		Ports: physicalPortsTF,
 	}
 
@@ -226,4 +257,63 @@ func convertToTerraformList(vlans []int64) []types.Int64 {
 		result[i] = types.Int64Value(vlan)
 	}
 	return result
+}
+
+func filterObjects(physicalPorts []autonomisdkmodel.PhysicalPort, filters []filter) []autonomisdkmodel.PhysicalPort {
+	var result []autonomisdkmodel.PhysicalPort
+
+	for _, physicalPort := range physicalPorts {
+		matches := true
+		for _, filter := range filters {
+
+			filterValue := make([]types.String, 0, len(filter.Values.Elements()))
+			_ = filter.Values.ElementsAs(context.TODO(), &filterValue, false)
+
+			switch strings.ToLower(filter.Name.ValueString()) {
+			case "name":
+				if !matchesFilter(physicalPort.Name, filter.Operator.ValueString(), filterValue) {
+					matches = false
+				}
+			case "location":
+				if !matchesFilter(physicalPort.Product.Location, filter.Operator.ValueString(), filterValue) {
+					matches = false
+				}
+			case "priceMrc":
+				if !matchesFilter(strconv.Itoa(physicalPort.Product.PriceMRC), filter.Operator.String(), filterValue) {
+					matches = false
+				}
+			case "priceNrc":
+				if !matchesFilter(strconv.Itoa(physicalPort.Product.PriceNRC), filter.Operator.String(), filterValue) {
+					matches = false
+				}
+			case "costMrc":
+				if !matchesFilter(strconv.Itoa(physicalPort.Product.CostMRC), filter.Operator.String(), filterValue) {
+					matches = false
+				}
+			case "costNrc":
+				if !matchesFilter(strconv.Itoa(physicalPort.Product.CostNRC), filter.Operator.String(), filterValue) {
+					matches = false
+				}
+			}
+		}
+		if matches {
+			result = append(result, physicalPort)
+		}
+	}
+	return result
+}
+
+func matchesFilter(physicalPortValue string, operator string, filterFieldValue []types.String) bool {
+	switch operator {
+	case "=":
+		return physicalPortValue == filterFieldValue[0].ValueString()
+	case "IN":
+		for _, v := range filterFieldValue {
+			if physicalPortValue == v.ValueString() {
+				return true
+			}
+		}
+		return false
+	}
+	return false
 }
