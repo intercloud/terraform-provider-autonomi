@@ -153,23 +153,23 @@ func (f filters) setLocationsJunction() error {
 }
 
 func (f filters) getFilterList() ([]string, error) {
-	var fs []string
+	var filterValues []string
 
 	if err := f.setLocationsJunction(); err != nil {
 		return nil, err
 	}
 
 	for _, v := range f {
-		v, err := v.build()
+		filterValue, err := v.build()
 
 		if err != nil {
 			return nil, err
 		}
 
-		fs = append(fs, v)
+		filterValues = append(filterValues, filterValue)
 	}
 
-	return fs, nil
+	return filterValues, nil
 }
 
 func getFiltersString(fs []filter) ([]string, error) {
