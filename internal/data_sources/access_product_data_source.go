@@ -109,7 +109,7 @@ func (d *accessProductDataSource) Configure(_ context.Context, req datasource.Co
 		return
 	}
 
-	catalogClient, ok := req.ProviderData.(*meilisearch.Client)
+	clients, ok := req.ProviderData.(models.Clients)
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Data Source Configure Type",
@@ -119,7 +119,7 @@ func (d *accessProductDataSource) Configure(_ context.Context, req datasource.Co
 		return
 	}
 
-	d.client = catalogClient
+	d.client = clients.CatalogClient
 }
 
 // Read refreshes the Terraform state with the latest data.

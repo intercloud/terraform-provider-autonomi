@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	autonomisdk "github.com/intercloud/autonomi-sdk"
+	"github.com/intercloud/terraform-provider-autonomi/external/products/models"
 	datasources "github.com/intercloud/terraform-provider-autonomi/internal/data_sources"
 	autonomiresource "github.com/intercloud/terraform-provider-autonomi/internal/resources"
 	"github.com/meilisearch/meilisearch-go"
@@ -170,9 +171,11 @@ func (p *autonomiProvider) Configure(ctx context.Context, req provider.Configure
 		return
 	}
 
+	datasourceClient := models.Clients{CatalogClient: catalogClient, AutonomiClient: client}
+
 	// Make the Autonomi client available during DataSource and Resource
 	// type Configure methods.
-	resp.DataSourceData = catalogClient
+	resp.DataSourceData = datasourceClient
 	resp.ResourceData = client
 }
 
@@ -184,6 +187,7 @@ func (p *autonomiProvider) DataSources(_ context.Context) []func() datasource.Da
 		datasources.NewTransportProductDataSource,
 		datasources.NewAccessProductsDataSource,
 		datasources.NewAccessProductDataSource,
+		datasources.NewPhysicalPortsDataSource,
 	}
 }
 
