@@ -1,4 +1,4 @@
-package datasources
+package filters
 
 import (
 	"testing"
@@ -27,13 +27,13 @@ func getValues(listValues []string) basetypes.ListValue {
 func TestGetFiltersString(t *testing.T) {
 	tests := []struct {
 		name    string
-		filters []filter
+		filters []Filter
 		expect  []string
 		err     error
 	}{
 		{
 			name: EqualFilterType.String(),
-			filters: []filter{
+			filters: []Filter{
 				{
 					Name:     types.StringValue("bandwidth"),
 					Operator: types.StringValue(EqualFilterType.String()),
@@ -45,7 +45,7 @@ func TestGetFiltersString(t *testing.T) {
 		},
 		{
 			name: EqualFilterType.String() + " must fail len(values) > 1",
-			filters: []filter{
+			filters: []Filter{
 				{
 					Name:     types.StringValue("bandwidth"),
 					Operator: types.StringValue(EqualFilterType.String()),
@@ -57,7 +57,7 @@ func TestGetFiltersString(t *testing.T) {
 		},
 		{
 			name: EqualFilterType.String() + " must fail len(values) < 1",
-			filters: []filter{
+			filters: []Filter{
 				{
 					Name:     types.StringValue("bandwidth"),
 					Operator: types.StringValue(EqualFilterType.String()),
@@ -69,7 +69,7 @@ func TestGetFiltersString(t *testing.T) {
 		},
 		{
 			name: ToFilterType.String(),
-			filters: []filter{
+			filters: []Filter{
 				{
 					Name:     types.StringValue("bandwidth"),
 					Operator: types.StringValue(ToFilterType.String()),
@@ -81,7 +81,7 @@ func TestGetFiltersString(t *testing.T) {
 		},
 		{
 			name: ToFilterType.String() + " must fail len(values) != 2",
-			filters: []filter{
+			filters: []Filter{
 				{
 					Name:     types.StringValue("bandwidth"),
 					Operator: types.StringValue(ToFilterType.String()),
@@ -93,7 +93,7 @@ func TestGetFiltersString(t *testing.T) {
 		},
 		{
 			name: InFilterType.String(),
-			filters: []filter{
+			filters: []Filter{
 				{
 					Name:     types.StringValue("location"),
 					Operator: types.StringValue(InFilterType.String()),
@@ -105,7 +105,7 @@ func TestGetFiltersString(t *testing.T) {
 		},
 		{
 			name: "transport junction",
-			filters: []filter{
+			filters: []Filter{
 				{
 					Name:     types.StringValue("location"),
 					Operator: types.StringValue(EqualFilterType.String()),
@@ -122,7 +122,7 @@ func TestGetFiltersString(t *testing.T) {
 		},
 		{
 			name: "transport junction different filter type",
-			filters: []filter{
+			filters: []Filter{
 				{
 					Name:     types.StringValue("location"),
 					Operator: types.StringValue(InFilterType.String()),
@@ -139,7 +139,7 @@ func TestGetFiltersString(t *testing.T) {
 		},
 		{
 			name: "transport junction with multiple locations bad operator",
-			filters: []filter{
+			filters: []Filter{
 				{
 					Name:     types.StringValue("location"),
 					Operator: types.StringValue(InFilterType.String()),
@@ -156,7 +156,7 @@ func TestGetFiltersString(t *testing.T) {
 		},
 		{
 			name: "transport junction with multiple locations",
-			filters: []filter{
+			filters: []Filter{
 				{
 					Name:     types.StringValue("location"),
 					Operator: types.StringValue(InFilterType.String()),
@@ -173,7 +173,7 @@ func TestGetFiltersString(t *testing.T) {
 		},
 		{
 			name: InFilterType.String() + " empty list",
-			filters: []filter{
+			filters: []Filter{
 				{
 					Name:     types.StringValue("location"),
 					Operator: types.StringValue(InFilterType.String()),
@@ -185,7 +185,7 @@ func TestGetFiltersString(t *testing.T) {
 		},
 		{
 			name: "wrong operator",
-			filters: []filter{
+			filters: []Filter{
 				{
 					Name:     types.StringValue("location"),
 					Operator: types.StringValue("plouf"),
@@ -200,7 +200,7 @@ func TestGetFiltersString(t *testing.T) {
 	for _, tc := range tests {
 		t.Log(tc.name)
 		tc := tc
-		filterString, err := getFiltersString(tc.filters)
+		filterString, err := GetFiltersString(tc.filters)
 		assert.Equal(t, tc.err, err)
 		assert.Equal(t, tc.expect, filterString)
 	}

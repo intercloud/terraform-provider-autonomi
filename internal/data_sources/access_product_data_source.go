@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/intercloud/terraform-provider-autonomi/external/products/models"
+	"github.com/intercloud/terraform-provider-autonomi/internal/data_sources/filters"
 	"github.com/meilisearch/meilisearch-go"
 )
 
@@ -19,7 +20,7 @@ type accessProductDataSource struct {
 
 type accessProductDataSourceModel struct {
 	Cheapest          *bool                                   `tfsdk:"cheapest"`
-	Filters           []filter                                `tfsdk:"filters"`
+	Filters           []filters.Filter                        `tfsdk:"filters"`
 	Hit               *accessHits                             `tfsdk:"hit"`
 	FacetDistribution *accessFacetDistributionDataSourceModel `tfsdk:"facet_distribution"`
 }
@@ -91,10 +92,10 @@ within the access products returned by the Meilisearch query. This attribute all
 different categories or attributes in the search results.`,
 				Computed: true,
 				Attributes: map[string]schema.Attribute{
-					"bandwidth": int64MapAttr,
-					"location":  int64MapAttr,
-					"provider":  int64MapAttr,
-					"type":      int64MapAttr,
+					"bandwidth": filters.Int64MapAttr,
+					"location":  filters.Int64MapAttr,
+					"provider":  filters.Int64MapAttr,
+					"type":      filters.Int64MapAttr,
 				},
 			},
 		},
@@ -137,7 +138,7 @@ func (d *accessProductDataSource) Read(ctx context.Context, req datasource.ReadR
 		fmt.Sprintf("%s %s \"%s\"", "provider", "=", models.INTERCLOUD),
 		fmt.Sprintf("%s %s \"%s\"", "type", "=", models.PHYSICAL),
 	}
-	filtersToAdd, err := getFiltersString(data.Filters)
+	filtersToAdd, err := filters.GetFiltersString(data.Filters)
 	if err != nil {
 		resp.Diagnostics.AddError("error getting filters", err.Error())
 	}

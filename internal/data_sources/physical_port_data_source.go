@@ -3,8 +3,6 @@ package datasources
 import (
 	"context"
 	"fmt"
-	"strconv"
-	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -12,6 +10,7 @@ import (
 	autonomisdk "github.com/intercloud/autonomi-sdk"
 	autonomisdkmodel "github.com/intercloud/autonomi-sdk/models"
 	"github.com/intercloud/terraform-provider-autonomi/external/products/models"
+	"github.com/intercloud/terraform-provider-autonomi/internal/data_sources/filters"
 )
 
 type physicalPortsDataSource struct {
@@ -41,7 +40,7 @@ type physicalPortHits struct {
 }
 
 type physicalPortDataSourceModel struct {
-	Filters []filter           `tfsdk:"filters"`
+	Filters []filters.Filter   `tfsdk:"filters"`
 	Ports   []physicalPortHits `tfsdk:"ports"`
 }
 
@@ -208,7 +207,11 @@ func (d *physicalPortsDataSource) Read(ctx context.Context, req datasource.ReadR
 		return
 	}
 
-	filterPhysicalPort := filterObjects(*respPhysicalPorts, data.Filters)
+	// apply filters on physical-ports list returned from autonomi
+	filterPhysicalPort, err := filters.Apply(*respPhysicalPorts, data.Filters)
+	if err != nil {
+		resp.Diagnostics.AddError("error getting filters", err.Error())
+	}
 
 	// Create a slice to hold the state
 	physicalPortsTF := []physicalPortHits{}
@@ -257,63 +260,4 @@ func convertToTerraformList(vlans []int64) []types.Int64 {
 		result[i] = types.Int64Value(vlan)
 	}
 	return result
-}
-
-func filterObjects(physicalPorts []autonomisdkmodel.PhysicalPort, filters []filter) []autonomisdkmodel.PhysicalPort {
-	var result []autonomisdkmodel.PhysicalPort
-
-	for _, physicalPort := range physicalPorts {
-		matches := true
-		for _, filter := range filters {
-
-			filterValue := make([]types.String, 0, len(filter.Values.Elements()))
-			_ = filter.Values.ElementsAs(context.TODO(), &filterValue, false)
-
-			switch strings.ToLower(filter.Name.ValueString()) {
-			case "name":
-				if !matchesFilter(physicalPort.Name, filter.Operator.ValueString(), filterValue) {
-					matches = false
-				}
-			case "location":
-				if !matchesFilter(physicalPort.Product.Location, filter.Operator.ValueString(), filterValue) {
-					matches = false
-				}
-			case "priceMrc":
-				if !matchesFilter(strconv.Itoa(physicalPort.Product.PriceMRC), filter.Operator.String(), filterValue) {
-					matches = false
-				}
-			case "priceNrc":
-				if !matchesFilter(strconv.Itoa(physicalPort.Product.PriceNRC), filter.Operator.String(), filterValue) {
-					matches = false
-				}
-			case "costMrc":
-				if !matchesFilter(strconv.Itoa(physicalPort.Product.CostMRC), filter.Operator.String(), filterValue) {
-					matches = false
-				}
-			case "costNrc":
-				if !matchesFilter(strconv.Itoa(physicalPort.Product.CostNRC), filter.Operator.String(), filterValue) {
-					matches = false
-				}
-			}
-		}
-		if matches {
-			result = append(result, physicalPort)
-		}
-	}
-	return result
-}
-
-func matchesFilter(physicalPortValue string, operator string, filterFieldValue []types.String) bool {
-	switch operator {
-	case "=":
-		return physicalPortValue == filterFieldValue[0].ValueString()
-	case "IN":
-		for _, v := range filterFieldValue {
-			if physicalPortValue == v.ValueString() {
-				return true
-			}
-		}
-		return false
-	}
-	return false
 }
