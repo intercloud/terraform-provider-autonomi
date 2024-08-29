@@ -29,7 +29,7 @@ data "autonomi_physical_ports" "ports" {
 
 ### Optional
 
-- `filters` (Attributes List) List of filters: [name, location, bandwidth, priceMrc, priceNrc].
+- `filters` (Attributes List) List of filters: [id, name, location, bandwidth, priceMrc, priceNrc].
 Operators avaiable are [=, IN] (see [below for nested schema](#nestedatt--filters))
 - `ports` (Attributes List) The **ports** attribute contains the list of physical ports available on the accountId.
 Each port represents a physical-port that matches the specified search criteria. (see [below for nested schema](#nestedatt--ports))

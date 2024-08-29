@@ -74,6 +74,9 @@ mainloop:
 }
 
 func (fg *filterAutonomi) match(physicalPort *autonomisdkmodel.PhysicalPort) bool {
+	if fg.Name == "id" {
+		return matchesFilter(physicalPort.ID.String(), fg.Operator, fg.Values)
+	}
 	if fg.Name == "name" {
 		return matchesFilter(physicalPort.Name, fg.Operator, fg.Values)
 	}
