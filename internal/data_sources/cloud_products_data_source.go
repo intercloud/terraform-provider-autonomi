@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/intercloud/terraform-provider-autonomi/external/products/models"
+	"github.com/intercloud/terraform-provider-autonomi/internal/data_sources/filters"
 
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
@@ -44,8 +45,8 @@ type cloudFacetDistributionDataSourceModel struct {
 }
 
 type cloudsProductsDataSourceModel struct {
-	Filters           []filter                               `tfsdk:"filters"`
-	Sort              []sortFacet                            `tfsdk:"sort"`
+	Filters           []filters.Filter                       `tfsdk:"filters"`
+	Sort              []filters.SortFacet                    `tfsdk:"sort"`
 	Hits              []cloudHits                            `tfsdk:"hits"`
 	FacetDistribution *cloudFacetDistributionDataSourceModel `tfsdk:"facet_distribution"`
 }
@@ -129,12 +130,12 @@ within the cloud products returned by the Meilisearch query. This attribute allo
 different categories or attributes in the search results.`,
 				Computed: true,
 				Attributes: map[string]schema.Attribute{
-					"bandwidth":  int64MapAttr,
-					"csp_city":   int64MapAttr,
-					"csp_name":   int64MapAttr,
-					"csp_region": int64MapAttr,
-					"location":   int64MapAttr,
-					"provider":   int64MapAttr,
+					"bandwidth":  filters.Int64MapAttr,
+					"csp_city":   filters.Int64MapAttr,
+					"csp_name":   filters.Int64MapAttr,
+					"csp_region": filters.Int64MapAttr,
+					"location":   filters.Int64MapAttr,
+					"provider":   filters.Int64MapAttr,
 				},
 			},
 		},
@@ -173,11 +174,11 @@ func (d *cloudProductsDataSource) Read(ctx context.Context, req datasource.ReadR
 		return
 	}
 
-	filtersStrings, err := getFiltersString(data.Filters)
+	filtersStrings, err := filters.GetFiltersString(data.Filters)
 	if err != nil {
 		resp.Diagnostics.AddError("error getting filters", err.Error())
 	}
-	sortStrings := getSortString(data.Sort)
+	sortStrings := filters.GetSortString(data.Sort)
 
 	// Define the search request
 	searchRequest := &meilisearch.SearchRequest{

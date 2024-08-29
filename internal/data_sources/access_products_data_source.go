@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/intercloud/terraform-provider-autonomi/external/products/models"
+	"github.com/intercloud/terraform-provider-autonomi/internal/data_sources/filters"
 	"github.com/meilisearch/meilisearch-go"
 )
 
@@ -39,8 +40,8 @@ type accessFacetDistributionDataSourceModel struct {
 }
 
 type accessProductsDataSourceModel struct {
-	Filters           []filter                                `tfsdk:"filters"`
-	Sort              []sortFacet                             `tfsdk:"sort"`
+	Filters           []filters.Filter                        `tfsdk:"filters"`
+	Sort              []filters.SortFacet                     `tfsdk:"sort"`
 	Hits              []accessHits                            `tfsdk:"hits"`
 	FacetDistribution *accessFacetDistributionDataSourceModel `tfsdk:"facet_distribution"`
 }
@@ -123,10 +124,10 @@ within the access products returned by the Meilisearch query. This attribute all
 different categories or attributes in the search results.`,
 				Computed: true,
 				Attributes: map[string]schema.Attribute{
-					"bandwidth": int64MapAttr,
-					"location":  int64MapAttr,
-					"provider":  int64MapAttr,
-					"type":      int64MapAttr,
+					"bandwidth": filters.Int64MapAttr,
+					"location":  filters.Int64MapAttr,
+					"provider":  filters.Int64MapAttr,
+					"type":      filters.Int64MapAttr,
 				},
 			},
 		},
@@ -169,12 +170,12 @@ func (d *accessProductsDataSource) Read(ctx context.Context, req datasource.Read
 		fmt.Sprintf("%s %s \"%s\"", "provider", "=", models.INTERCLOUD),
 		fmt.Sprintf("%s %s \"%s\"", "type", "=", models.PHYSICAL),
 	}
-	filtersToAdd, err := getFiltersString(data.Filters)
+	filtersToAdd, err := filters.GetFiltersString(data.Filters)
 	if err != nil {
 		resp.Diagnostics.AddError("error getting filters", err.Error())
 	}
 	filterStrings = append(filterStrings, filtersToAdd...)
-	sortStrings := getSortString(data.Sort)
+	sortStrings := filters.GetSortString(data.Sort)
 
 	// Define the search request
 	searchRequest := &meilisearch.SearchRequest{

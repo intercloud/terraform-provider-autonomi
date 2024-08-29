@@ -7,6 +7,7 @@ import (
 	"sort"
 
 	"github.com/intercloud/terraform-provider-autonomi/external/products/models"
+	"github.com/intercloud/terraform-provider-autonomi/internal/data_sources/filters"
 
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
@@ -22,7 +23,7 @@ type cloudProductDataSource struct {
 
 type cloudsProductDataSourceModel struct {
 	Cheapest          *bool                                  `tfsdk:"cheapest"`
-	Filters           []filter                               `tfsdk:"filters"`
+	Filters           []filters.Filter                       `tfsdk:"filters"`
 	Hit               *cloudHits                             `tfsdk:"hit"`
 	FacetDistribution *cloudFacetDistributionDataSourceModel `tfsdk:"facet_distribution"`
 }
@@ -94,12 +95,12 @@ within the cloud products returned by the Meilisearch query. This attribute allo
 different categories or attributes in the search results.`,
 				Computed: true,
 				Attributes: map[string]schema.Attribute{
-					"bandwidth":  int64MapAttr,
-					"csp_city":   int64MapAttr,
-					"csp_name":   int64MapAttr,
-					"csp_region": int64MapAttr,
-					"location":   int64MapAttr,
-					"provider":   int64MapAttr,
+					"bandwidth":  filters.Int64MapAttr,
+					"csp_city":   filters.Int64MapAttr,
+					"csp_name":   filters.Int64MapAttr,
+					"csp_region": filters.Int64MapAttr,
+					"location":   filters.Int64MapAttr,
+					"provider":   filters.Int64MapAttr,
 				},
 			},
 		},
@@ -114,7 +115,7 @@ func (d *cloudProductDataSource) Configure(_ context.Context, req datasource.Con
 		return
 	}
 
-	catalogClient, ok := req.ProviderData.(*meilisearch.Client)
+	clients, ok := req.ProviderData.(models.Clients)
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Data Source Configure Type",
@@ -124,7 +125,7 @@ func (d *cloudProductDataSource) Configure(_ context.Context, req datasource.Con
 		return
 	}
 
-	d.client = catalogClient
+	d.client = clients.CatalogClient
 }
 
 // Read refreshes the Terraform state with the latest data.
@@ -138,7 +139,7 @@ func (d *cloudProductDataSource) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 
-	filtersStrings, err := getFiltersString(data.Filters)
+	filtersStrings, err := filters.GetFiltersString(data.Filters)
 	if err != nil {
 		resp.Diagnostics.AddError("error getting filters", err.Error())
 	}
