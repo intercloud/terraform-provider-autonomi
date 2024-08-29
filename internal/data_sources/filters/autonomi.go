@@ -15,18 +15,18 @@ type filterAutonomi struct {
 
 type filtersAutonomi []filterAutonomi
 
-func filtersTerraformToGolang(dataFilters []Filter) (filtersAutonomi, error) {
+func filtersAutonomiFromTerraform(dataFilters []Filter) (filtersAutonomi, error) {
 	var filtersOut filtersAutonomi
 	for _, filter := range dataFilters {
 		if err := validateFilterAutonomi(filter); err != nil {
 			return nil, err
 		}
-		filtersOut = append(filtersOut, filterTerraformToGolang(&filter))
+		filtersOut = append(filtersOut, filterAutonomiFromTerraform(&filter))
 	}
 	return filtersOut, nil
 }
 
-func filterTerraformToGolang(dataFilters *Filter) filterAutonomi {
+func filterAutonomiFromTerraform(dataFilters *Filter) filterAutonomi {
 	values := []string{}
 	for _, v := range dataFilters.Values.Elements() {
 		value := strings.Replace(v.String(), "\"", "", -1)
@@ -56,7 +56,7 @@ func validateFilterAutonomi(filter Filter) error {
 func Apply(physicalPorts []autonomisdkmodel.PhysicalPort, filtersTerraform []Filter) ([]autonomisdkmodel.PhysicalPort, error) {
 	var result []autonomisdkmodel.PhysicalPort
 
-	filters, err := filtersTerraformToGolang(filtersTerraform)
+	filters, err := filtersAutonomiFromTerraform(filtersTerraform)
 	if err != nil {
 		return nil, err
 	}

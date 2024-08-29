@@ -64,8 +64,9 @@ func (d *physicalPortsDataSource) Schema(_ context.Context, _ datasource.SchemaR
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"filters": schema.ListNestedAttribute{
-				MarkdownDescription: "List of filters: [name, location, bandwidth, priceMrc, priceNrc, costMrc, costNrc]",
-				Optional:            true,
+				MarkdownDescription: `List of filters: [name, location, bandwidth, priceMrc, priceNrc].
+Operators avaiable are [=, IN]`,
+				Optional: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"name": schema.StringAttribute{
