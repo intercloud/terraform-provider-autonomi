@@ -3,12 +3,16 @@
 page_title: "autonomi_access_node Resource - autonomi"
 subcategory: ""
 description: |-
-  
+  Manages an access node resource.
+  Access node resource allows you to create, modify and delete Autonomi access nodes.
+  Autonomi access node allows you to easily connect to your datacenters assets via a physical connection (physical access node) or a virtual connection through Megaport / Equinix connections (virtual access nodes).
 ---
 
 # autonomi_access_node (Resource)
 
-
+Manages an access node resource. 
+Access node resource allows you to create, modify and delete Autonomi access nodes.
+Autonomi access node allows you to easily connect to your datacenters assets via a physical connection (physical access node) or a virtual connection through Megaport / Equinix connections (virtual access nodes).
 
 ## Example Usage
 

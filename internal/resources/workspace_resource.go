@@ -69,6 +69,9 @@ func (r *workspaceResource) Configure(_ context.Context, req resource.ConfigureR
 // Schema defines the schema for the resource.
 func (r *workspaceResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		MarkdownDescription: `Manages a workspace resource. 
+Workspace resource allows you to create, modify and delete Autonomi workspaces.
+Autonomi workspaces allows you to easily organize your projects by grouping Autonomi elements together.`,
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				MarkdownDescription: "ID of the workspace, set after creation",

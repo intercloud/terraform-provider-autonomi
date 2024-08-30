@@ -80,6 +80,9 @@ func (r *transportResource) Metadata(_ context.Context, req resource.MetadataReq
 // Schema defines the schema for the resource.
 func (r *transportResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		MarkdownDescription: `Manages a transport resource. 
+Transport resource allows you to create, modify and delete Autonomi transports.
+Autonomi transport offers connection between Autonomi nodes (cloud nodes, access nodes).`,
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				MarkdownDescription: "ID of the transport, set after creation",

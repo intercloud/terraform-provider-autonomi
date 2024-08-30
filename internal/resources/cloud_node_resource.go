@@ -88,6 +88,9 @@ func (r *cloudNodeResource) Metadata(_ context.Context, req resource.MetadataReq
 // Schema defines the schema for the resource.
 func (r *cloudNodeResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		MarkdownDescription: `Manages a cloud node resource. 
+Cloud node resource allows you to create, modify and delete Autonomi cloud nodes.
+Autonomi cloud node offers easy connection to cloud providers (AWS, Azure, GCP).`,
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				MarkdownDescription: "ID of the cloud node, set after creation",

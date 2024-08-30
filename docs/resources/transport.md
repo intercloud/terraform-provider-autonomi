@@ -3,12 +3,16 @@
 page_title: "autonomi_transport Resource - autonomi"
 subcategory: ""
 description: |-
-  
+  Manages a transport resource.
+  Transport resource allows you to create, modify and delete Autonomi transports.
+  Autonomi transport offers connection between Autonomi nodes (cloud nodes, access nodes).
 ---
 
 # autonomi_transport (Resource)
 
-
+Manages a transport resource. 
+Transport resource allows you to create, modify and delete Autonomi transports.
+Autonomi transport offers connection between Autonomi nodes (cloud nodes, access nodes).
 
 ## Example Usage
 
