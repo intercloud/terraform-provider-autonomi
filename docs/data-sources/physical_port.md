@@ -9,7 +9,7 @@ description: |-
 # autonomi_physical_port (Data Source)
 
 ```terraform
-data "autonomi_physical_ports" "ports" {
+data "autonomi_physical_port" "port" {
   most_recent = true,
   filters = [
       {
