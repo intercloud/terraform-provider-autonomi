@@ -3,12 +3,14 @@
 page_title: "autonomi_physical_port Data Source - autonomi"
 subcategory: ""
 description: |-
-  
+  Datasource to retrieve a single physical port by filters.
+  If zero, or more than one, port(s) are retrieved with the filters, this datasource raises an error.
 ---
 
 # autonomi_physical_port (Data Source)
 
-
+Datasource to retrieve a single physical port by filters.
+If zero, or more than one, port(s) are retrieved with the filters, this datasource raises an error.
 
 ## Example Usage
 

@@ -46,6 +46,8 @@ func (d *cloudProductDataSource) Metadata(_ context.Context, req datasource.Meta
 // Schema defines the schema for the data source.
 func (d *cloudProductDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		MarkdownDescription: `Datasource to retrieve a single cloud node product by filters.
+If zero, or more than one, product are retrieved with the filters, this datasource raises an error.`,
 		Attributes: map[string]schema.Attribute{
 			"cheapest": schema.BoolAttribute{
 				MarkdownDescription: "To ensure only one hit is returned we advise to set at true",

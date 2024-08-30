@@ -3,12 +3,12 @@
 page_title: "autonomi_physical_ports Data Source - autonomi"
 subcategory: ""
 description: |-
-  
+  Datasource to retrieve a list of physical ports by filters.
 ---
 
 # autonomi_physical_ports (Data Source)
 
-
+Datasource to retrieve a list of physical ports by filters.
 
 ## Example Usage
 

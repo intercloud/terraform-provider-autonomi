@@ -3,12 +3,12 @@
 page_title: "autonomi_access_products Data Source - autonomi"
 subcategory: ""
 description: |-
-  
+  Datasource to retrieve a list of access node products by filters.
 ---
 
 # autonomi_access_products (Data Source)
 
-
+Datasource to retrieve a list of access node products by filters.
 
 ## Example Usage
 
