@@ -8,6 +8,10 @@ description: |-
 
 # autonomi_cloud_node (Resource)
 
+
+
+## Example Usage
+
 ```terraform
 resource "autonomi_cloud_node" "cloud_node" {
   name = "Node name"
@@ -50,6 +54,7 @@ deployed, delete_pending, delete_proceed, delete_error]
 Required:
 
 - `sku` (String) ID of the product
+
 
 <a id="nestedatt--provider_config"></a>
 ### Nested Schema for `provider_config`

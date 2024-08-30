@@ -8,6 +8,8 @@ description: |-
 
 # autonomi Provider
 
+
+
 ## Example Usage
 
 ```terraform
@@ -26,6 +28,4 @@ provider "autonomi" {
 
 ### Optional
 
-- `personal_access_token` (String, Sensitive) Personal Access Token (PAT) to authenticate through Autonomi API.
-This token can be obtained from the Autonomi service and is required to access and manage resources via the API.
-Can be set as variable or in environment as AUTONOMI_PAT
+- `personal_access_token` (String, Sensitive) Personal Access Token (PAT) to authenticate through Autonomi API. This token can be obtained from the Autonomi service and is required to access and manage resources via the API. Can be set as variable or in environment as AUTONOMI_PAT

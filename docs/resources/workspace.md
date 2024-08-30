@@ -8,6 +8,10 @@ description: |-
 
 # autonomi_workspace (Resource)
 
+
+
+## Example Usage
+
 ```terraform
 resource "autonomi_workspace" "workspace" {
   name = "Workspace Name"

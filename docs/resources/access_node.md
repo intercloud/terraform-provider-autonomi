@@ -8,6 +8,10 @@ description: |-
 
 # autonomi_access_node (Resource)
 
+
+
+## Example Usage
+
 ```terraform
 resource "autonomi_access_node" "access_node" {
   name = "Node name"

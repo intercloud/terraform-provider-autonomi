@@ -8,6 +8,10 @@ description: |-
 
 # autonomi_attachment (Resource)
 
+
+
+## Example Usage
+
 ```terraform
 resource "autonomi_attachment" "attachment"{
   workspace_id = autonomi_workspace.created_workspace.id
