@@ -10,7 +10,7 @@ description: |-
 
 # autonomi_cloud_node (Resource)
 
-Manages a cloud node resource. 
+Manages a cloud node resource.
 Cloud node resource allows you to create, modify and delete Autonomi cloud nodes.
 Autonomi cloud node offers easy connection to cloud providers (AWS, Azure, GCP).
 

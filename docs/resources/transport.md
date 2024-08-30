@@ -10,7 +10,7 @@ description: |-
 
 # autonomi_transport (Resource)
 
-Manages a transport resource. 
+Manages a transport resource.
 Transport resource allows you to create, modify and delete Autonomi transports.
 Autonomi transport offers connection between Autonomi nodes (cloud nodes, access nodes).
 

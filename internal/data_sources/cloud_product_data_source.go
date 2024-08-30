@@ -73,8 +73,8 @@ If zero, or more than one, product are retrieved with the filters, this datasour
 			},
 			"hit": schema.SingleNestedAttribute{
 				MarkdownDescription: `The **hit** attribute contains the access products returned by the Meilisearch query.
-				Each hit represents a cloud product that matches the specified search criteria.
-				If no hit is returned, an error will be returned`,
+Each hit represents a cloud product that matches the specified search criteria.
+If no hit is returned, an error will be returned`,
 				Computed: true,
 				Attributes: map[string]schema.Attribute{
 					"id":        schema.Int64Attribute{Computed: true},

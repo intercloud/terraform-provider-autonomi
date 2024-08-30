@@ -9,7 +9,7 @@ description: |-
 
 # autonomi_attachment (Resource)
 
-Manages an attachment resource. 
+Manages an attachment resource.
 Attachment resource allows you to attach nodes and transports together, allowing traffic between them.
 
 ## Example Usage

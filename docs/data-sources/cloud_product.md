@@ -59,8 +59,8 @@ data "autonomi_cloud_product" "single_cloud_product" {
 within the cloud products returned by the Meilisearch query. This attribute allows you to analyze the frequency of
 different categories or attributes in the search results. (see [below for nested schema](#nestedatt--facet_distribution))
 - `hit` (Attributes) The **hit** attribute contains the access products returned by the Meilisearch query.
-				Each hit represents a cloud product that matches the specified search criteria.
-				If no hit is returned, an error will be returned (see [below for nested schema](#nestedatt--hit))
+Each hit represents a cloud product that matches the specified search criteria.
+If no hit is returned, an error will be returned (see [below for nested schema](#nestedatt--hit))
 
 <a id="nestedatt--filters"></a>
 ### Nested Schema for `filters`
