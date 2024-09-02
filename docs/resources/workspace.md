@@ -10,7 +10,7 @@ description: |-
 
 # autonomi_workspace (Resource)
 
-Manages a workspace resource. 
+Manages a workspace resource.
 Workspace resource allows you to create, modify and delete Autonomi workspaces.
 Autonomi workspaces allows you to easily organize your projects by grouping Autonomi elements together.
 

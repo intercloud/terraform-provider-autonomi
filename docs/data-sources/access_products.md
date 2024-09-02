@@ -64,7 +64,6 @@ Optional:
 - `operator` (String)
 - `values` (List of String)
 
-
 <a id="nestedatt--sort"></a>
 ### Nested Schema for `sort`
 
@@ -72,7 +71,6 @@ Optional:
 
 - `name` (String)
 - `value` (String)
-
 
 <a id="nestedatt--facet_distribution"></a>
 ### Nested Schema for `facet_distribution`
@@ -83,7 +81,6 @@ Read-Only:
 - `location` (Map of Number)
 - `provider` (Map of Number)
 - `type` (Map of Number)
-
 
 <a id="nestedatt--hits"></a>
 ### Nested Schema for `hits`

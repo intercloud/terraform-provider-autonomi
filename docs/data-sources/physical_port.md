@@ -51,7 +51,6 @@ Optional:
 - `operator` (String)
 - `values` (List of String)
 
-
 <a id="nestedatt--port"></a>
 ### Nested Schema for `port`
 

@@ -56,6 +56,9 @@ func (p *autonomiProvider) Metadata(_ context.Context, _ provider.MetadataReques
 // Schema defines the provider-level schema for configuration data.
 func (p *autonomiProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp *provider.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		MarkdownDescription: `Use the Autonomi provider to create and manage Autonomi resources using Autonomi REST API.
+Autonomi allows you to easily inter-connect your clouds and enterprise resources.
+You must configure the provider with the proper credentials before you can use it.`,
 		Attributes: map[string]schema.Attribute{
 			"terms_and_conditions": schema.BoolAttribute{
 				MarkdownDescription: "Terms and conditions",
