@@ -117,7 +117,7 @@ func TestGetFiltersString(t *testing.T) {
 					Values:   getValues([]string{"EQUINIX LD5"}),
 				},
 			},
-			expect: []string{"(location = \"EQUINIX FR5\" && locationTo = \"EQUINIX LD5\") or (locationTo = \"EQUINIX FR5\" && location = \"EQUINIX LD5\")"},
+			expect: []string{"(location = \"EQUINIX FR5\" AND locationTo = \"EQUINIX LD5\") OR (locationTo = \"EQUINIX FR5\" AND location = \"EQUINIX LD5\")"},
 			err:    nil,
 		},
 		{
@@ -134,7 +134,7 @@ func TestGetFiltersString(t *testing.T) {
 					Values:   getValues([]string{"EQUINIX LD5"}),
 				},
 			},
-			expect: []string{"(location = \"EQUINIX FR5\" && locationTo = \"EQUINIX LD5\") or (locationTo = \"EQUINIX FR5\" && location = \"EQUINIX LD5\")"},
+			expect: []string{"(location = \"EQUINIX FR5\" AND locationTo = \"EQUINIX LD5\") OR (locationTo = \"EQUINIX FR5\" AND location = \"EQUINIX LD5\")"},
 			err:    nil,
 		},
 		{
@@ -168,7 +168,7 @@ func TestGetFiltersString(t *testing.T) {
 					Values:   getValues([]string{"EQUINIX AM2", "EQUINIX PA3"}),
 				},
 			},
-			expect: []string{"(location = \"EQUINIX FR5\" && locationTo = \"EQUINIX AM2\") or (locationTo = \"EQUINIX FR5\" && location = \"EQUINIX AM2\") or (location = \"EQUINIX FR5\" && locationTo = \"EQUINIX PA3\") or (locationTo = \"EQUINIX FR5\" && location = \"EQUINIX PA3\") or (location = \"EQUINIX AM2\" && locationTo = \"EQUINIX AM2\") or (location = \"EQUINIX AM2\" && locationTo = \"EQUINIX PA3\") or (locationTo = \"EQUINIX AM2\" && location = \"EQUINIX PA3\") or (location = \"EQUINIX SG1\" && locationTo = \"EQUINIX AM2\") or (locationTo = \"EQUINIX SG1\" && location = \"EQUINIX AM2\") or (location = \"EQUINIX SG1\" && locationTo = \"EQUINIX PA3\") or (locationTo = \"EQUINIX SG1\" && location = \"EQUINIX PA3\")"},
+			expect: []string{"(location = \"EQUINIX FR5\" AND locationTo = \"EQUINIX AM2\") OR (locationTo = \"EQUINIX FR5\" AND location = \"EQUINIX AM2\") OR (location = \"EQUINIX FR5\" AND locationTo = \"EQUINIX PA3\") OR (locationTo = \"EQUINIX FR5\" AND location = \"EQUINIX PA3\") OR (location = \"EQUINIX AM2\" AND locationTo = \"EQUINIX AM2\") OR (location = \"EQUINIX AM2\" AND locationTo = \"EQUINIX PA3\") OR (locationTo = \"EQUINIX AM2\" AND location = \"EQUINIX PA3\") OR (location = \"EQUINIX SG1\" AND locationTo = \"EQUINIX AM2\") OR (locationTo = \"EQUINIX SG1\" AND location = \"EQUINIX AM2\") OR (location = \"EQUINIX SG1\" AND locationTo = \"EQUINIX PA3\") OR (locationTo = \"EQUINIX SG1\" AND location = \"EQUINIX PA3\")"},
 			err:    nil,
 		},
 		{
