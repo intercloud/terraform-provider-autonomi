@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/intercloud/terraform-provider-autonomi/external/products/models"
+	"github.com/intercloud/terraform-provider-autonomi/internal/data_sources/filters"
 	"github.com/meilisearch/meilisearch-go"
 )
 
@@ -19,7 +20,7 @@ type accessProductDataSource struct {
 
 type accessProductDataSourceModel struct {
 	Cheapest          *bool                                   `tfsdk:"cheapest"`
-	Filters           []filter                                `tfsdk:"filters"`
+	Filters           []filters.Filter                        `tfsdk:"filters"`
 	Hit               *accessHits                             `tfsdk:"hit"`
 	FacetDistribution *accessFacetDistributionDataSourceModel `tfsdk:"facet_distribution"`
 }
@@ -42,6 +43,8 @@ func (d *accessProductDataSource) Metadata(_ context.Context, req datasource.Met
 // Schema defines the schema for the data source.
 func (d *accessProductDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		MarkdownDescription: `Datasource to retrieve a single access node product by filters.
+If zero, or more than one, product are retrieved with the filters, this datasource raises an error.`,
 		Attributes: map[string]schema.Attribute{
 			"cheapest": schema.BoolAttribute{
 				MarkdownDescription: "To ensure only one hit is returned we advise to set at true",
@@ -53,12 +56,15 @@ func (d *accessProductDataSource) Schema(_ context.Context, _ datasource.SchemaR
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"name": schema.StringAttribute{
+							MarkdownDescription: "Name of the filter among [location, bandwidth]",
 							Optional: true,
 						},
 						"operator": schema.StringAttribute{
+							MarkdownDescription: "Comparison operator",
 							Optional: true,
 						},
 						"values": schema.ListAttribute{
+							MarkdownDescription: "Values of the filter",
 							ElementType: types.StringType,
 							Optional:    true,
 						},
@@ -67,8 +73,8 @@ func (d *accessProductDataSource) Schema(_ context.Context, _ datasource.SchemaR
 			},
 			"hit": schema.SingleNestedAttribute{
 				MarkdownDescription: `The **hit** attribute contains the access products returned by the Meilisearch query.
-				Each hit represents an access product that matches the specified search criteria.
-				If no hit is returned, an error will be returned`,
+Each hit represents an access product that matches the specified search criteria.
+If no hit is returned, an error will be returned.`,
 				Computed: true,
 				Attributes: map[string]schema.Attribute{
 					"id":        schema.Int64Attribute{Computed: true},
@@ -91,10 +97,10 @@ within the access products returned by the Meilisearch query. This attribute all
 different categories or attributes in the search results.`,
 				Computed: true,
 				Attributes: map[string]schema.Attribute{
-					"bandwidth": int64MapAttr,
-					"location":  int64MapAttr,
-					"provider":  int64MapAttr,
-					"type":      int64MapAttr,
+					"bandwidth": filters.Int64MapAttr,
+					"location":  filters.Int64MapAttr,
+					"provider":  filters.Int64MapAttr,
+					"type":      filters.Int64MapAttr,
 				},
 			},
 		},
@@ -109,7 +115,7 @@ func (d *accessProductDataSource) Configure(_ context.Context, req datasource.Co
 		return
 	}
 
-	catalogClient, ok := req.ProviderData.(*meilisearch.Client)
+	clients, ok := req.ProviderData.(models.Clients)
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Data Source Configure Type",
@@ -119,7 +125,7 @@ func (d *accessProductDataSource) Configure(_ context.Context, req datasource.Co
 		return
 	}
 
-	d.client = catalogClient
+	d.client = clients.CatalogClient
 }
 
 // Read refreshes the Terraform state with the latest data.
@@ -137,7 +143,7 @@ func (d *accessProductDataSource) Read(ctx context.Context, req datasource.ReadR
 		fmt.Sprintf("%s %s \"%s\"", "provider", "=", models.INTERCLOUD),
 		fmt.Sprintf("%s %s \"%s\"", "type", "=", models.PHYSICAL),
 	}
-	filtersToAdd, err := getFiltersString(data.Filters)
+	filtersToAdd, err := filters.GetFiltersString(data.Filters)
 	if err != nil {
 		resp.Diagnostics.AddError("error getting filters", err.Error())
 	}

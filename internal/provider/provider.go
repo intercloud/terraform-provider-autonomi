@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	autonomisdk "github.com/intercloud/autonomi-sdk"
+	"github.com/intercloud/terraform-provider-autonomi/external/products/models"
 	datasources "github.com/intercloud/terraform-provider-autonomi/internal/data_sources"
 	autonomiresource "github.com/intercloud/terraform-provider-autonomi/internal/resources"
 	"github.com/meilisearch/meilisearch-go"
@@ -60,6 +61,9 @@ func (p *autonomiProvider) Metadata(_ context.Context, _ provider.MetadataReques
 // Schema defines the provider-level schema for configuration data.
 func (p *autonomiProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp *provider.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		MarkdownDescription: `Use the Autonomi provider to create and manage Autonomi resources using Autonomi REST API.
+Autonomi allows you to easily inter-connect your clouds and enterprise resources.
+You must configure the provider with the proper credentials before you can use it.`,
 		Attributes: map[string]schema.Attribute{
 			"terms_and_conditions": schema.BoolAttribute{
 				MarkdownDescription: "Terms and conditions",
@@ -182,9 +186,11 @@ func (p *autonomiProvider) Configure(ctx context.Context, req provider.Configure
 		return
 	}
 
+	datasourceClient := models.Clients{CatalogClient: catalogClient, AutonomiClient: client}
+
 	// Make the Autonomi client available during DataSource and Resource
 	// type Configure methods.
-	resp.DataSourceData = catalogClient
+	resp.DataSourceData = datasourceClient
 	resp.ResourceData = client
 }
 
@@ -197,6 +203,8 @@ func (p *autonomiProvider) DataSources(_ context.Context) []func() datasource.Da
 		datasources.NewTransportProductsDataSource,
 		datasources.NewAccessProductsDataSource,
 		datasources.NewAccessProductDataSource,
+		datasources.NewPhysicalPortsDataSource,
+		datasources.NewPhysicalPortDataSource,
 	}
 }
 

@@ -1,5 +1,10 @@
 package models
 
+import (
+	autonomisdk "github.com/intercloud/autonomi-sdk"
+	"github.com/meilisearch/meilisearch-go"
+)
+
 type ProviderType string
 
 const (
@@ -25,4 +30,9 @@ type Product struct {
 	CostNRC          int    `json:"costNrc"`
 	CostMRC          int    `json:"costMrc"`
 	SKU              string `json:"sku"`
+}
+
+type Clients struct {
+	CatalogClient  *meilisearch.Client
+	AutonomiClient *autonomisdk.Client
 }

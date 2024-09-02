@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/intercloud/terraform-provider-autonomi/external/products/models"
+	"github.com/intercloud/terraform-provider-autonomi/internal/data_sources/filters"
 
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
@@ -44,8 +45,8 @@ type cloudFacetDistributionDataSourceModel struct {
 }
 
 type cloudsProductsDataSourceModel struct {
-	Filters           []filter                               `tfsdk:"filters"`
-	Sort              []sortFacet                            `tfsdk:"sort"`
+	Filters           []filters.Filter                       `tfsdk:"filters"`
+	Sort              []filters.SortFacet                    `tfsdk:"sort"`
 	Hits              []cloudHits                            `tfsdk:"hits"`
 	FacetDistribution *cloudFacetDistributionDataSourceModel `tfsdk:"facet_distribution"`
 }
@@ -68,6 +69,7 @@ func (d *cloudProductsDataSource) Metadata(_ context.Context, req datasource.Met
 // Schema defines the schema for the data source.
 func (d *cloudProductsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		MarkdownDescription: "Datasource to retrieve a list of cloud node products by filters.",
 		Attributes: map[string]schema.Attribute{
 			"filters": schema.ListNestedAttribute{
 				MarkdownDescription: "List of filters: [cspName, cspRegion, cspCity, location, bandwidth, provider]",
@@ -129,12 +131,12 @@ within the cloud products returned by the Meilisearch query. This attribute allo
 different categories or attributes in the search results.`,
 				Computed: true,
 				Attributes: map[string]schema.Attribute{
-					"bandwidth":  int64MapAttr,
-					"csp_city":   int64MapAttr,
-					"csp_name":   int64MapAttr,
-					"csp_region": int64MapAttr,
-					"location":   int64MapAttr,
-					"provider":   int64MapAttr,
+					"bandwidth":  filters.Int64MapAttr,
+					"csp_city":   filters.Int64MapAttr,
+					"csp_name":   filters.Int64MapAttr,
+					"csp_region": filters.Int64MapAttr,
+					"location":   filters.Int64MapAttr,
+					"provider":   filters.Int64MapAttr,
 				},
 			},
 		},
@@ -149,7 +151,7 @@ func (d *cloudProductsDataSource) Configure(_ context.Context, req datasource.Co
 		return
 	}
 
-	catalogClient, ok := req.ProviderData.(*meilisearch.Client)
+	clients, ok := req.ProviderData.(models.Clients)
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Data Source Configure Type",
@@ -159,7 +161,7 @@ func (d *cloudProductsDataSource) Configure(_ context.Context, req datasource.Co
 		return
 	}
 
-	d.client = catalogClient
+	d.client = clients.CatalogClient
 }
 
 // Read refreshes the Terraform state with the latest data.
@@ -173,11 +175,11 @@ func (d *cloudProductsDataSource) Read(ctx context.Context, req datasource.ReadR
 		return
 	}
 
-	filtersStrings, err := getFiltersString(data.Filters)
+	filtersStrings, err := filters.GetFiltersString(data.Filters)
 	if err != nil {
 		resp.Diagnostics.AddError("error getting filters", err.Error())
 	}
-	sortStrings := getSortString(data.Sort)
+	sortStrings := filters.GetSortString(data.Sort)
 
 	// Define the search request
 	searchRequest := &meilisearch.SearchRequest{

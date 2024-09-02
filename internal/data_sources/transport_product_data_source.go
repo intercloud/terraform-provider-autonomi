@@ -7,6 +7,7 @@ import (
 	"sort"
 
 	"github.com/intercloud/terraform-provider-autonomi/external/products/models"
+	"github.com/intercloud/terraform-provider-autonomi/internal/data_sources/filters"
 
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
@@ -22,7 +23,7 @@ type transportProductDataSource struct {
 
 type transportProductDataSourceModel struct {
 	Cheapest          *bool                                      `tfsdk:"cheapest"`
-	Filters           []filter                                   `tfsdk:"filters"`
+	Filters           []filters.Filter                           `tfsdk:"filters"`
 	Hit               *transportHits                             `tfsdk:"hit"`
 	FacetDistribution *transportFacetDistributionDataSourceModel `tfsdk:"facet_distribution"`
 }
@@ -45,6 +46,8 @@ func (d *transportProductDataSource) Metadata(_ context.Context, req datasource.
 // Schema defines the schema for the data source.
 func (d *transportProductDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		MarkdownDescription: `Datasource to retrieve a single transport product by filters.
+If zero, or more than one, product are retrieved with the filters, this datasource raises an error.`,
 		Attributes: map[string]schema.Attribute{
 			"cheapest": schema.BoolAttribute{
 				MarkdownDescription: "To ensure only one hit is returned we advise to set at true",
@@ -95,10 +98,10 @@ within the transport products returned by the Meilisearch query. This attribute 
 of different categories or attributes in the search results.`,
 				Computed: true,
 				Attributes: map[string]schema.Attribute{
-					"provider":    int64MapAttr,
-					"bandwidth":   int64MapAttr,
-					"location":    int64MapAttr,
-					"location_to": int64MapAttr,
+					"provider":    filters.Int64MapAttr,
+					"bandwidth":   filters.Int64MapAttr,
+					"location":    filters.Int64MapAttr,
+					"location_to": filters.Int64MapAttr,
 				},
 			},
 		},
@@ -113,7 +116,7 @@ func (d *transportProductDataSource) Configure(_ context.Context, req datasource
 		return
 	}
 
-	catalogClient, ok := req.ProviderData.(*meilisearch.Client)
+	clients, ok := req.ProviderData.(models.Clients)
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Data Source Configure Type",
@@ -123,7 +126,7 @@ func (d *transportProductDataSource) Configure(_ context.Context, req datasource
 		return
 	}
 
-	d.client = catalogClient
+	d.client = clients.CatalogClient
 }
 
 // Read refreshes the Terraform state with the latest data.
@@ -137,7 +140,7 @@ func (d *transportProductDataSource) Read(ctx context.Context, req datasource.Re
 		return
 	}
 
-	filtersStrings, err := getFiltersString(data.Filters)
+	filtersStrings, err := filters.GetFiltersString(data.Filters)
 	if err != nil {
 		resp.Diagnostics.AddError("error getting filters", err.Error())
 	}

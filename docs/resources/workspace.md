@@ -3,10 +3,18 @@
 page_title: "autonomi_workspace Resource - autonomi"
 subcategory: ""
 description: |-
-  
+  Manages a workspace resource.
+  Workspace resource allows you to create, modify and delete Autonomi workspaces.
+  Autonomi workspaces allows you to easily organize your projects by grouping Autonomi elements together.
 ---
 
 # autonomi_workspace (Resource)
+
+Manages a workspace resource.
+Workspace resource allows you to create, modify and delete Autonomi workspaces.
+Autonomi workspaces allows you to easily organize your projects by grouping Autonomi elements together.
+
+## Example Usage
 
 ```terraform
 resource "autonomi_workspace" "workspace" {
