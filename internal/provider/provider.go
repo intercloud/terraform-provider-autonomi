@@ -38,6 +38,11 @@ type autonomiProviderModel struct {
 	PAT                types.String `tfsdk:"personal_access_token"`
 }
 
+const (
+	AUTONOMI_HOST_URL    = "https://api.autonomi-platform.com/v1"
+	AUTONOMI_CATALOG_URL = "https://search.autonomi-platform.com"
+)
+
 // New is a helper function to simplify provider server and testing implementation.
 func New(version string) func() provider.Provider {
 	return func() provider.Provider {
@@ -98,8 +103,15 @@ func (p *autonomiProvider) Configure(ctx context.Context, req provider.Configure
 	} else {
 		personal_access_token = os.Getenv("AUTONOMI_PAT")
 	}
+
 	host_url = os.Getenv("AUTONOMI_HOST_URL")
+	if host_url == "" {
+		host_url = AUTONOMI_HOST_URL
+	}
 	catalog_url = os.Getenv("AUTONOMI_CATALOG_URL")
+	if catalog_url == "" {
+		catalog_url = AUTONOMI_CATALOG_URL
+	}
 
 	// If any of the expected configurations are missing, return
 	// errors with provider-specific guidance.
