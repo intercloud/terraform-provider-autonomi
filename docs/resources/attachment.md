@@ -3,10 +3,16 @@
 page_title: "autonomi_attachment Resource - autonomi"
 subcategory: ""
 description: |-
-  
+  Manages an attachment resource.
+  Attachment resource allows you to attach nodes and transports together, allowing traffic between them.
 ---
 
 # autonomi_attachment (Resource)
+
+Manages an attachment resource.
+Attachment resource allows you to attach nodes and transports together, allowing traffic between them.
+
+## Example Usage
 
 ```terraform
 resource "autonomi_attachment" "attachment"{

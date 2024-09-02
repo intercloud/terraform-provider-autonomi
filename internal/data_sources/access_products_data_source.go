@@ -64,6 +64,7 @@ func (d *accessProductsDataSource) Metadata(_ context.Context, req datasource.Me
 // Schema defines the schema for the data source.
 func (d *accessProductsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		MarkdownDescription: "Datasource to retrieve a list of access node products by filters.",
 		Attributes: map[string]schema.Attribute{
 			"filters": schema.ListNestedAttribute{
 				MarkdownDescription: "List of filters: [location, bandwidth]",
