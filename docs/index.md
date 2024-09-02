@@ -3,10 +3,16 @@
 page_title: "autonomi Provider"
 subcategory: ""
 description: |-
-  
+  Use the Autonomi provider to create and manage Autonomi resources using Autonomi REST API.
+  Autonomi allows you to easily inter-connect your clouds and enterprise resources.
+  You must configure the provider with the proper credentials before you can use it.
 ---
 
 # autonomi Provider
+
+Use the Autonomi provider to create and manage Autonomi resources using Autonomi REST API.
+Autonomi allows you to easily inter-connect your clouds and enterprise resources.
+You must configure the provider with the proper credentials before you can use it.
 
 ## Example Usage
 

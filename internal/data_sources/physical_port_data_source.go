@@ -42,6 +42,8 @@ func (d *physicalPortDataSource) Metadata(_ context.Context, req datasource.Meta
 // Schema defines the schema for the data source.
 func (d *physicalPortDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		MarkdownDescription: `Datasource to retrieve a single physical port by filters.
+If zero, or more than one, port(s) are retrieved with the filters, this datasource raises an error.`,
 		Attributes: map[string]schema.Attribute{
 			"most_recent": schema.BoolAttribute{
 				MarkdownDescription: "To ensure only one hit is returned we advise to set at true",

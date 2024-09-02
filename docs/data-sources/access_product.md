@@ -3,10 +3,16 @@
 page_title: "autonomi_access_product Data Source - autonomi"
 subcategory: ""
 description: |-
-  
+  Datasource to retrieve a single access node product by filters.
+  If zero, or more than one, product are retrieved with the filters, this datasource raises an error.
 ---
 
 # autonomi_access_product (Data Source)
+
+Datasource to retrieve a single access node product by filters.
+If zero, or more than one, product are retrieved with the filters, this datasource raises an error.
+
+## Example Usage
 
 ```terraform
 data "autonomi_access_product" "one_product" {
@@ -48,9 +54,9 @@ If no hit is returned, an error will be returned (see [below for nested schema](
 
 Optional:
 
-- `name` (String)
-- `operator` (String)
-- `values` (List of String)
+- `name` (String) Name of the filter among [location, bandwidth]
+- `operator` (String) Comparison operator
+- `values` (List of String) Values of the filter
 
 <a id="nestedatt--facet_distribution"></a>
 ### Nested Schema for `facet_distribution`

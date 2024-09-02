@@ -43,6 +43,8 @@ func (d *accessProductDataSource) Metadata(_ context.Context, req datasource.Met
 // Schema defines the schema for the data source.
 func (d *accessProductDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		MarkdownDescription: `Datasource to retrieve a single access node product by filters.
+If zero, or more than one, product are retrieved with the filters, this datasource raises an error.`,
 		Attributes: map[string]schema.Attribute{
 			"cheapest": schema.BoolAttribute{
 				MarkdownDescription: "To ensure only one hit is returned we advise to set at true",
@@ -54,12 +56,15 @@ func (d *accessProductDataSource) Schema(_ context.Context, _ datasource.SchemaR
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"name": schema.StringAttribute{
+							MarkdownDescription: "Name of the filter among [location, bandwidth]",
 							Optional: true,
 						},
 						"operator": schema.StringAttribute{
+							MarkdownDescription: "Comparison operator",
 							Optional: true,
 						},
 						"values": schema.ListAttribute{
+							MarkdownDescription: "Values of the filter",
 							ElementType: types.StringType,
 							Optional:    true,
 						},
@@ -68,8 +73,8 @@ func (d *accessProductDataSource) Schema(_ context.Context, _ datasource.SchemaR
 			},
 			"hit": schema.SingleNestedAttribute{
 				MarkdownDescription: `The **hit** attribute contains the access products returned by the Meilisearch query.
-				Each hit represents an access product that matches the specified search criteria.
-				If no hit is returned, an error will be returned`,
+Each hit represents an access product that matches the specified search criteria.
+If no hit is returned, an error will be returned.`,
 				Computed: true,
 				Attributes: map[string]schema.Attribute{
 					"id":        schema.Int64Attribute{Computed: true},

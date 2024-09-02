@@ -74,6 +74,9 @@ func (r *accessNodeResource) Metadata(_ context.Context, req resource.MetadataRe
 // Schema defines the schema for the resource.
 func (r *accessNodeResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		MarkdownDescription: `Manages an access node resource.
+Access node resource allows you to create, modify and delete Autonomi access nodes.
+Autonomi access node allows you to easily connect to your datacenters assets via a physical connection (physical access node) or a virtual connection through Megaport / Equinix connections (virtual access nodes).`,
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				MarkdownDescription: "ID of the access node, set after creation",
