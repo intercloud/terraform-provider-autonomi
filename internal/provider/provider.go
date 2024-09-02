@@ -39,7 +39,7 @@ type autonomiProviderModel struct {
 }
 
 const (
-	AUTONOMI_HOST_URL    = "https://api.autonomi-platform.com/v1/"
+	AUTONOMI_HOST_URL    = "https://api.autonomi-platform.com/v1"
 	AUTONOMI_CATALOG_URL = "https://search.autonomi-platform.com"
 )
 
