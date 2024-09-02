@@ -110,12 +110,11 @@ func combineLocationPairs(locations, locationsTo []string) string {
 
 	for _, location := range locations {
 		for _, locationTo := range locationsTo {
-			result = append(result, fmt.Sprintf("(location = %s && locationTo = %s)", location, locationTo))
+			result = append(result, fmt.Sprintf("(location = %s AND locationTo = %s)", location, locationTo))
 			if location != locationTo {
-				result = append(result, fmt.Sprintf("(locationTo = %s && location = %s)", location, locationTo))
+				result = append(result, fmt.Sprintf("(locationTo = %s AND location = %s)", location, locationTo))
 			}
 		}
 	}
-
-	return strings.Join(result, " or ")
+	return strings.Join(result, " OR ")
 }
