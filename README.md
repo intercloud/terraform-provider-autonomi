@@ -8,7 +8,7 @@ Use the Autonomi provider to interact with the many resources supported by Auton
 terraform {
   required_providers {
     autonomi = {
-      source = "hashicorp.com/intercloud/autonomi"
+      source = "intercloud/autonomi"
     }
   }
 }
