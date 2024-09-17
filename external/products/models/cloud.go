@@ -1,14 +1,5 @@
 package models
 
-type CloudFilters struct {
-	CSPName   string
-	CSPRegion string
-	CSPCity   string
-	Provider  ProviderType
-	Location  string
-	Bandwidth int
-}
-
 type CloudProduct struct {
 	Product
 	CSPName string `json:"cspName"`

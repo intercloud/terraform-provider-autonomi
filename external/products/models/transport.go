@@ -1,12 +1,5 @@
 package models
 
-type TransportFilters struct {
-	Provider   string
-	Location   string
-	LocationTo string
-	Bandwidth  int
-}
-
 type TransportProduct struct {
 	Product
 	LocationTo         string `json:"locationTo"`

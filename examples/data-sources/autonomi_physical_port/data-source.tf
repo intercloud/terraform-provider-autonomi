@@ -1,5 +1,5 @@
 data "autonomi_physical_port" "port" {
-  most_recent = true,
+  most_recent = true
   filters = [
       {
         name    = "location"
