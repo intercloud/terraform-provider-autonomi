@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -18,9 +20,10 @@ type virtualAccessNodeResource struct {
 	client *autonomisdk.Client
 }
 
-type serviceKey struct {
-	ID             types.String `tfsdk:"id"`
-	ExpirationDate types.String `tfsdk:"expiration_date"`
+var serviceKey = map[string]attr.Type{
+	"id":              types.StringType,
+	"name":            types.StringType,
+	"expiration_date": types.StringType,
 }
 
 type virtualAccessNodeResourceModel struct {
@@ -34,7 +37,7 @@ type virtualAccessNodeResourceModel struct {
 	Type        types.String `tfsdk:"type"`
 	Product     product      `tfsdk:"product"`
 	Vlan        types.Int64  `tfsdk:"vlan"`
-	ServiceKey  serviceKey   `tfsdk:"service_key"`
+	ServiceKey  types.Object `tfsdk:"service_key"`
 }
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -125,17 +128,28 @@ deployed, delete_pending, delete_proceed, delete_error]`,
 			},
 			"vlan": schema.Int64Attribute{
 				MarkdownDescription: "Vlan of the access node",
-				Required:            true,
+				Computed:            true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.UseStateForUnknown(),
+				},
 			},
 			"type": schema.StringAttribute{
 				MarkdownDescription: "Type of the node [access]",
 				Computed:            true,
 			},
 			"service_key": schema.SingleNestedAttribute{
-				Computed: true,
+				MarkdownDescription: "Access node's service key",
+				Computed:            true,
 				Attributes: map[string]schema.Attribute{
 					"id": schema.StringAttribute{
 						MarkdownDescription: "ID of the service key",
+						Computed:            true,
+						PlanModifiers: []planmodifier.String{
+							stringplanmodifier.UseStateForUnknown(),
+						},
+					},
+					"name": schema.StringAttribute{
+						MarkdownDescription: "name of the service key",
 						Computed:            true,
 						PlanModifiers: []planmodifier.String{
 							stringplanmodifier.UseStateForUnknown(),
@@ -191,10 +205,21 @@ func (r *virtualAccessNodeResource) Create(ctx context.Context, req resource.Cre
 	plan.UpdatedAt = types.StringValue(node.UpdatedAt.String())
 	plan.DeployedAt = types.StringValue(node.DeployedAt.String())
 	plan.Vlan = types.Int64Value(node.Vlan)
-	plan.ServiceKey = serviceKey{
-		ID:             types.StringValue(node.ServiceKey.ID),
-		ExpirationDate: types.StringValue(node.ServiceKey.ExpirationDate),
+	// set serviceKey object
+	serviceKeyObject, diag := types.ObjectValue(
+		serviceKey,
+		map[string]attr.Value{
+			"id":              types.StringValue(node.ServiceKey.ID),
+			"name":            types.StringValue(node.ServiceKey.Name),
+			"expiration_date": types.StringValue(node.ServiceKey.ExpirationDate.String()),
+		},
+	)
+	// Check for errors
+	if diag.HasError() {
+		resp.Diagnostics.Append(diag...)
+		return
 	}
+	plan.ServiceKey = serviceKeyObject
 
 	// Set state to fully populated data
 	diags = resp.State.Set(ctx, plan)
@@ -235,10 +260,20 @@ func (r *virtualAccessNodeResource) Read(ctx context.Context, req resource.ReadR
 		SKU: types.StringValue(node.Product.SKU),
 	}
 	state.Vlan = types.Int64Value(node.Vlan)
-	state.ServiceKey = serviceKey{
-		ID:             types.StringValue(node.ServiceKey.ID),
-		ExpirationDate: types.StringValue(node.ServiceKey.ExpirationDate),
+	serviceKeyObject, diag := types.ObjectValue(
+		serviceKey,
+		map[string]attr.Value{
+			"id":              types.StringValue(node.ServiceKey.ID),
+			"name":            types.StringValue(node.ServiceKey.Name),
+			"expiration_date": types.StringValue(node.ServiceKey.ExpirationDate.String()),
+		},
+	)
+	// Check for errors
+	if diag.HasError() {
+		resp.Diagnostics.Append(diag...)
+		return
 	}
+	state.ServiceKey = serviceKeyObject
 
 	// Set refreshed state
 	diags = resp.State.Set(ctx, &state)
@@ -280,10 +315,20 @@ func (r *virtualAccessNodeResource) Update(ctx context.Context, req resource.Upd
 	plan.UpdatedAt = types.StringValue(node.UpdatedAt.String())
 	plan.DeployedAt = types.StringValue(node.DeployedAt.String())
 	plan.Vlan = types.Int64Value(node.Vlan)
-	plan.ServiceKey = serviceKey{
-		ID:             types.StringValue(node.ServiceKey.ID),
-		ExpirationDate: types.StringValue(node.ServiceKey.ExpirationDate),
+	serviceKeyObject, diag := types.ObjectValue(
+		serviceKey,
+		map[string]attr.Value{
+			"id":              types.StringValue(node.ServiceKey.ID),
+			"name":            types.StringValue(node.ServiceKey.Name),
+			"expiration_date": types.StringValue(node.ServiceKey.ExpirationDate.String()),
+		},
+	)
+	// Check for errors
+	if diag.HasError() {
+		resp.Diagnostics.Append(diag...)
+		return
 	}
+	plan.ServiceKey = serviceKeyObject
 	plan.Product = product{
 		SKU: types.StringValue(node.Product.SKU),
 	}
