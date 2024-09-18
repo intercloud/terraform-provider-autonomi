@@ -3,7 +3,9 @@ package autonomiresource
 import (
 	"context"
 	"fmt"
+	"math/big"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -20,13 +22,15 @@ type physicalPortResource struct {
 }
 
 type physicalPortResourceModel struct {
-	ID        types.String `tfsdk:"id"`
-	AccountID types.String `tfsdk:"account_id"`
-	CreatedAt types.String `tfsdk:"created_at"`
-	UpdatedAt types.String `tfsdk:"updated_at"`
-	Name      types.String `tfsdk:"name"`
-	State     types.String `tfsdk:"administrative_state"`
-	Product   product      `tfsdk:"product"`
+	ID                 types.String `tfsdk:"id"`
+	AccountID          types.String `tfsdk:"account_id"`
+	CreatedAt          types.String `tfsdk:"created_at"`
+	UpdatedAt          types.String `tfsdk:"updated_at"`
+	Name               types.String `tfsdk:"name"`
+	State              types.String `tfsdk:"administrative_state"`
+	Product            product      `tfsdk:"product"`
+	AvailableBandwidth types.Int64  `tfsdk:"available_bandwidth"`
+	UsedVLANs          types.List   `tfsdk:"used_vlans"`
 }
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -114,6 +118,15 @@ They allow you to connect InterCloud back bone through access node.`,
 					},
 				},
 			},
+			"available_bandwidth": schema.Int64Attribute{
+				MarkdownDescription: `Available bandwidth on the physical port`,
+				Computed:            true,
+			},
+			"used_vlans": schema.ListAttribute{
+				MarkdownDescription: `Vlan already attributed on the physical port`,
+				Computed:            true,
+				ElementType:         types.NumberType,
+			},
 		},
 	}
 }
@@ -152,6 +165,8 @@ func (r *physicalPortResource) Create(ctx context.Context, req resource.CreateRe
 	plan.State = types.StringValue(physicalPort.State.String())
 	plan.CreatedAt = types.StringValue(physicalPort.CreatedAt.String())
 	plan.UpdatedAt = types.StringValue(physicalPort.UpdatedAt.String())
+	plan.AvailableBandwidth = types.Int64Value(int64(physicalPort.AvailableBandwidth))
+	plan.UsedVLANs = types.ListValueMust(types.NumberType, convertInt64ArrayToNumberValues(physicalPort.UsedVLANs))
 
 	// Set state to fully populated data
 	diags = resp.State.Set(ctx, plan)
@@ -190,6 +205,8 @@ func (r *physicalPortResource) Read(ctx context.Context, req resource.ReadReques
 		SKU: types.StringValue(physicalPort.Product.SKU),
 	}
 	state.AccountID = types.StringValue(physicalPort.AccountID)
+	state.AvailableBandwidth = types.Int64Value(int64(physicalPort.AvailableBandwidth))
+	state.UsedVLANs = types.ListValueMust(types.NumberType, convertInt64ArrayToNumberValues(physicalPort.UsedVLANs))
 
 	// Set refreshed state
 	diags = resp.State.Set(ctx, &state)
@@ -220,4 +237,14 @@ func (r *physicalPortResource) Delete(ctx context.Context, req resource.DeleteRe
 		)
 		return
 	}
+}
+
+// Helper function to convert []int64 to []attr.Value for use in ListValueMust
+func convertInt64ArrayToNumberValues(input []int64) []attr.Value {
+	result := make([]attr.Value, len(input))
+	for i, v := range input {
+		// We convert each int64 into a Terraform-compatible number value
+		result[i] = types.NumberValue(new(big.Float).SetInt64(v))
+	}
+	return result
 }
