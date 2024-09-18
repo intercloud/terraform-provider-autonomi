@@ -7,7 +7,7 @@ require (
 	github.com/hashicorp/terraform-plugin-framework v1.10.0
 	github.com/hashicorp/terraform-plugin-go v0.23.0
 	github.com/hashicorp/terraform-plugin-testing v1.9.0
-	github.com/intercloud/autonomi-sdk v0.0.13
+	github.com/intercloud/autonomi-sdk v0.0.14
 	github.com/meilisearch/meilisearch-go v0.27.2
 	github.com/stretchr/testify v1.9.0
 )
