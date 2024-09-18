@@ -218,6 +218,7 @@ func (p *autonomiProvider) Resources(_ context.Context) []func() resource.Resour
 		autonomiresource.NewWorkspaceResource,
 		autonomiresource.NewCloudNodeResource,
 		autonomiresource.NewAccessNodeResource,
+		autonomiresource.NewVirtualAccessNodeResource,
 		autonomiresource.NewTransportResource,
 		autonomiresource.NewAttachmentResource,
 		autonomiresource.NewPhysicalPortResource,
