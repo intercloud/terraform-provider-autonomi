@@ -203,6 +203,8 @@ func (p *autonomiProvider) DataSources(_ context.Context) []func() datasource.Da
 		datasources.NewTransportProductsDataSource,
 		datasources.NewAccessProductsDataSource,
 		datasources.NewAccessProductDataSource,
+		datasources.NewVirtualAccessProductsDataSource,
+		datasources.NewVirtualAccessProductDataSource,
 		datasources.NewPhysicalPortsDataSource,
 		datasources.NewPhysicalPortDataSource,
 		datasources.NewPhysicalPortProductDataSource,
