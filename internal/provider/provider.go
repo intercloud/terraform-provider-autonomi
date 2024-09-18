@@ -218,5 +218,6 @@ func (p *autonomiProvider) Resources(_ context.Context) []func() resource.Resour
 		autonomiresource.NewAccessNodeResource,
 		autonomiresource.NewTransportResource,
 		autonomiresource.NewAttachmentResource,
+		autonomiresource.NewPhysicalPortResource,
 	}
 }

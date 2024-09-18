@@ -237,7 +237,7 @@ func (d *physicalPortsDataSource) Read(ctx context.Context, req datasource.ReadR
 				CostMRC:   types.Int64Value(int64(physicalPort.Product.CostMRC)),
 				SKU:       types.StringValue(physicalPort.Product.SKU),
 			},
-			State:     types.StringValue(physicalPort.State),
+			State:     types.StringValue(physicalPort.State.String()),
 			UsedVLANs: convertToTerraformList(physicalPort.UsedVLANs),
 		}
 		physicalPortsTF = append(physicalPortsTF, physicalPortTF)
