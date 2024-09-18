@@ -16,7 +16,7 @@ If zero, or more than one, port(s) are retrieved with the filters, this datasour
 
 ```terraform
 data "autonomi_physical_port" "port" {
-  most_recent = true,
+  most_recent = true
   filters = [
       {
         name    = "location"
