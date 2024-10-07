@@ -42,6 +42,7 @@ resource "autonomi_physical_port" "physical_port" {
 - `available_bandwidth` (Number) Available bandwidth on the physical port
 - `created_at` (String) Creation date of the physical port
 - `id` (String) ID of the physical port, set after creation
+- `loa_access_url` (String) URL to the physical port page where the LOA is downloadable
 - `updated_at` (String) Update date of the physical port
 - `used_vlans` (List of Number) Vlan already attributed on the physical port
 

@@ -8,10 +8,6 @@ default: true
 MD013:
   line_length: 180
 
-# MD022/blanks-around-headings : Headings should be surrounded by blank lines : https://github.com/DavidAnson/markdownlint/blob/v0.34.0/doc/md022.md
-MD022:
-  lines_above: 0
-
 # MD033/no-inline-html : Inline HTML : https://github.com/DavidAnson/markdownlint/blob/v0.34.0/doc/md033.md
 MD033:
   allowed_elements:
