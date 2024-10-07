@@ -54,6 +54,7 @@ Required:
 
 - `sku` (String) ID of the product
 
+
 <a id="nestedatt--service_key"></a>
 ### Nested Schema for `service_key`
 

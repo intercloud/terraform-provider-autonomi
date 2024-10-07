@@ -63,6 +63,7 @@ Optional:
 - `operator` (String) Comparison operator
 - `values` (List of String) Values of the filter
 
+
 <a id="nestedatt--facet_distribution"></a>
 ### Nested Schema for `facet_distribution`
 
@@ -72,6 +73,7 @@ Read-Only:
 - `location` (Map of Number)
 - `provider` (Map of Number)
 - `type` (Map of Number)
+
 
 <a id="nestedatt--hit"></a>
 ### Nested Schema for `hit`
