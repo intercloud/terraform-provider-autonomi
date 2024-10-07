@@ -35,7 +35,7 @@ type physicalPortResourceModel struct {
 	Product            product      `tfsdk:"product"`
 	AvailableBandwidth types.Int64  `tfsdk:"available_bandwidth"`
 	UsedVLANs          types.List   `tfsdk:"used_vlans"`
-	LOAAccessURI       types.String `tfsdk:"loa_access_uri"`
+	LOAAccessURL       types.String `tfsdk:"loa_access_url"`
 }
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -132,8 +132,8 @@ They allow you to connect InterCloud back bone through access node.`,
 				Computed:            true,
 				ElementType:         types.NumberType,
 			},
-			"loa_access_uri": schema.StringAttribute{
-				MarkdownDescription: `URI to the physical port page where the LOA is downloadable`,
+			"loa_access_url": schema.StringAttribute{
+				MarkdownDescription: `URL to the physical port page where the LOA is downloadable`,
 				Computed:            true,
 			},
 		},
@@ -176,7 +176,7 @@ func (r *physicalPortResource) Create(ctx context.Context, req resource.CreateRe
 	plan.UpdatedAt = types.StringValue(physicalPort.UpdatedAt.String())
 	plan.AvailableBandwidth = types.Int64Value(int64(physicalPort.AvailableBandwidth))
 	plan.UsedVLANs = types.ListValueMust(types.NumberType, convertInt64ArrayToNumberValues(physicalPort.UsedVLANs))
-	plan.LOAAccessURI = types.StringValue(fmt.Sprintf("%s/ports/details/port/%s", AUTONOMI_FRONT_URL, physicalPort.ID))
+	plan.LOAAccessURL = types.StringValue(fmt.Sprintf("%s/ports/details/port/%s", AUTONOMI_FRONT_URL, physicalPort.ID))
 	// Set state to fully populated data
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
@@ -216,7 +216,7 @@ func (r *physicalPortResource) Read(ctx context.Context, req resource.ReadReques
 	state.AccountID = types.StringValue(physicalPort.AccountID)
 	state.AvailableBandwidth = types.Int64Value(int64(physicalPort.AvailableBandwidth))
 	state.UsedVLANs = types.ListValueMust(types.NumberType, convertInt64ArrayToNumberValues(physicalPort.UsedVLANs))
-	state.LOAAccessURI = types.StringValue(fmt.Sprintf("%s/ports/details/port/%s", AUTONOMI_FRONT_URL, physicalPort.ID))
+	state.LOAAccessURL = types.StringValue(fmt.Sprintf("%s/ports/details/port/%s", AUTONOMI_FRONT_URL, physicalPort.ID))
 	// Set refreshed state
 	diags = resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
