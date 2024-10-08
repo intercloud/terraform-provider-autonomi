@@ -56,17 +56,17 @@ If zero, or more than one, product are retrieved with the filters, this datasour
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"name": schema.StringAttribute{
-							MarkdownDescription: "Name of the filter among [location, bandwidth]",
-							Optional: true,
+							MarkdownDescription: "Name of the filter among **location**, **bandwidth**",
+							Optional:            true,
 						},
 						"operator": schema.StringAttribute{
-							MarkdownDescription: "Comparison operator",
-							Optional: true,
+							MarkdownDescription: "Comparison operators. You can use the following list: **=**, **!=**, **>**, **>=**, **<**, **<=**, **IN**, **TO**. **IN** will return any products which have the values you passed when **TO** will return any value contained between the two (and only two) values you passed.",
+							Optional:            true,
 						},
 						"values": schema.ListAttribute{
 							MarkdownDescription: "Values of the filter",
-							ElementType: types.StringType,
-							Optional:    true,
+							ElementType:         types.StringType,
+							Optional:            true,
 						},
 					},
 				},
