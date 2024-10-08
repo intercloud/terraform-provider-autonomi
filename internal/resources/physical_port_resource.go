@@ -176,7 +176,7 @@ func (r *physicalPortResource) Create(ctx context.Context, req resource.CreateRe
 	plan.UpdatedAt = types.StringValue(physicalPort.UpdatedAt.String())
 	plan.AvailableBandwidth = types.Int64Value(int64(physicalPort.AvailableBandwidth))
 	plan.UsedVLANs = types.ListValueMust(types.NumberType, convertInt64ArrayToNumberValues(physicalPort.UsedVLANs))
-	plan.LOAAccessURL = types.StringValue(fmt.Sprintf("%s/ports/details/port/%s", AUTONOMI_FRONT_URL, physicalPort.ID))
+	plan.LOAAccessURL = types.StringValue(physicalPort.LOAAccessURL)
 	// Set state to fully populated data
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
