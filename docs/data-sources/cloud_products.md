@@ -59,7 +59,7 @@ data "autonomi_cloud_products" "clouds" {
 
 - `filters` (Attributes List) List of filters: [cspName, cspRegion, cspCity, location, bandwidth, provider] (see [below for nested schema](#nestedatt--filters))
 - `sort` (Attributes List) List of sort: [cspName, cspRegion, cspCity, location, bandwidth, provider,
-priceNrc, priceMrc, costNrc, costMrc] (see [below for nested schema](#nestedatt--sort))
+priceNrc, priceMrc] (see [below for nested schema](#nestedatt--sort))
 
 ### Read-Only
 
@@ -74,9 +74,9 @@ Each hit represents a cloud product that matches the specified search criteria. 
 
 Optional:
 
-- `name` (String)
-- `operator` (String)
-- `values` (List of String)
+- `name` (String) Name of the filter among **cspName**, **cspRegion**, **cspCity**, **location**, **bandwidth**, **provider**
+- `operator` (String) Comparison operators. You can use the following list: **=**, **!=**, **>**, **>=**, **<**, **<=**, **IN**, **TO**. **IN** will return any products which have the values you passed when **TO** will return any value contained between the two (and only two) values you passed.
+- `values` (List of String) Values of the filter
 
 
 <a id="nestedatt--sort"></a>
@@ -84,8 +84,8 @@ Optional:
 
 Optional:
 
-- `name` (String)
-- `value` (String)
+- `name` (String) The name of the key used for sorting. You can set multiple name among **cspName**, **cspRegion**, **cspCity**, **location**, **bandwidth**, **provider**, **priceNrc**, **priceMrc**
+- `value` (String) You can sort list ascending using **asc** or descending using **desc**. The order of the values matters as the first entry will be prioritized
 
 
 <a id="nestedatt--facet_distribution"></a>

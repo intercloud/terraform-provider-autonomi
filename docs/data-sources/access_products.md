@@ -45,7 +45,7 @@ data "autonomi_access_products" "access" {
 ### Optional
 
 - `filters` (Attributes List) List of filters: [location, bandwidth] (see [below for nested schema](#nestedatt--filters))
-- `sort` (Attributes List) List of sort: [location, bandwidth, priceNrc, priceMrc, costNrc, costMrc] (see [below for nested schema](#nestedatt--sort))
+- `sort` (Attributes List) List of sort: [location, bandwidth, priceNrc, priceMrc] (see [below for nested schema](#nestedatt--sort))
 
 ### Read-Only
 
@@ -60,9 +60,9 @@ Each hit represents an access product that matches the specified search criteria
 
 Optional:
 
-- `name` (String)
-- `operator` (String)
-- `values` (List of String)
+- `name` (String) Name of the filter among **location**, **bandwidth**
+- `operator` (String) Comparison operators. You can use the following list: **=**, **!=**, **>**, **>=**, **<**, **<=**, **IN**, **TO**. **IN** will return any products which have the values you passed when **TO** will return any value contained between the two (and only two) values you passed.
+- `values` (List of String) Values of the filter
 
 
 <a id="nestedatt--sort"></a>
@@ -70,8 +70,8 @@ Optional:
 
 Optional:
 
-- `name` (String)
-- `value` (String)
+- `name` (String) The name of the key used for sorting. You can set multiple name among **location**, **bandwidth**, **priceNrc**, **priceMrc**
+- `value` (String) You can sort list ascending using **asc** or descending using **desc**. The order of the values matters as the first entry will be prioritized
 
 
 <a id="nestedatt--facet_distribution"></a>

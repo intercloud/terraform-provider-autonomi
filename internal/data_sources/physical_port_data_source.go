@@ -51,15 +51,17 @@ If zero, or more than one, port(s) are retrieved with the filters, this datasour
 			},
 			"filters": schema.ListNestedAttribute{
 				MarkdownDescription: `List of filters: [id, name, location, bandwidth, priceMrc, priceNrc].
-Operators avaiable are [=, IN]`,
+Operators avaiable are **=**, **IN**`,
 				Optional: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"name": schema.StringAttribute{
-							Optional: true,
+							MarkdownDescription: "Name of the filter among **id**, **name**, **location**, **bandwidth**, **priceMrc**, **priceNrc**",
+							Optional:            true,
 						},
 						"operator": schema.StringAttribute{
-							Optional: true,
+							MarkdownDescription: "Comparison operators. You can use the following list: **=**, **IN**. **IN** will return any products which have the values you passed.",
+							Optional:            true,
 						},
 						"values": schema.ListAttribute{
 							ElementType: types.StringType,
@@ -73,22 +75,18 @@ Operators avaiable are [=, IN]`,
 Each port represents a physical-port that matches the specified search criteria.`,
 				Optional: true,
 				Attributes: map[string]schema.Attribute{
-					// ID attribute for the physical port
 					"id": schema.StringAttribute{
 						MarkdownDescription: "The **ID** of the physical port.",
 						Computed:            true,
 					},
-					// Name attribute for the physical port
 					"name": schema.StringAttribute{
 						MarkdownDescription: "The **name** of the physical port.",
 						Computed:            true,
 					},
-					// Account ID attribute
 					"account_id": schema.StringAttribute{
 						MarkdownDescription: "The **account ID** associated with the physical port.",
 						Computed:            true,
 					},
-					// Product attribute that nests a physicalPortProduct structure
 					"product": schema.SingleNestedAttribute{
 						MarkdownDescription: "The **product** attribute represents details about the physical port product.",
 						Computed:            true,
@@ -131,17 +129,14 @@ Each port represents a physical-port that matches the specified search criteria.
 							},
 						},
 					},
-					// Available Bandwidth attribute
 					"available_bandwidth": schema.Int64Attribute{
 						MarkdownDescription: "The **available bandwidth** on the physical port.",
 						Computed:            true,
 					},
-					// Administrative State attribute
 					"administrative_state": schema.StringAttribute{
 						MarkdownDescription: "The **administrative state** of the physical port.",
 						Computed:            true,
 					},
-					// Used VLANs attribute as a list of Int64
 					"used_vlans": schema.ListAttribute{
 						MarkdownDescription: "A list of **used VLANs** on the physical port.",
 						Computed:            true,

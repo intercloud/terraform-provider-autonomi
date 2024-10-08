@@ -77,29 +77,34 @@ func (d *cloudProductsDataSource) Schema(_ context.Context, _ datasource.SchemaR
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"name": schema.StringAttribute{
-							Optional: true,
+							MarkdownDescription: "Name of the filter among **cspName**, **cspRegion**, **cspCity**, **location**, **bandwidth**, **provider**",
+							Optional:            true,
 						},
 						"operator": schema.StringAttribute{
-							Optional: true,
+							MarkdownDescription: "Comparison operators. You can use the following list: **=**, **!=**, **>**, **>=**, **<**, **<=**, **IN**, **TO**. **IN** will return any products which have the values you passed when **TO** will return any value contained between the two (and only two) values you passed.",
+							Optional:            true,
 						},
 						"values": schema.ListAttribute{
-							ElementType: types.StringType,
-							Optional:    true,
+							MarkdownDescription: "Values of the filter",
+							ElementType:         types.StringType,
+							Optional:            true,
 						},
 					},
 				},
 			},
 			"sort": schema.ListNestedAttribute{
 				MarkdownDescription: `List of sort: [cspName, cspRegion, cspCity, location, bandwidth, provider,
-priceNrc, priceMrc, costNrc, costMrc]`,
+priceNrc, priceMrc]`,
 				Optional: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"name": schema.StringAttribute{
-							Optional: true,
+							MarkdownDescription: "The name of the key used for sorting. You can set multiple name among **cspName**, **cspRegion**, **cspCity**, **location**, **bandwidth**, **provider**, **priceNrc**, **priceMrc**",
+							Optional:            true,
 						},
 						"value": schema.StringAttribute{
-							Optional: true,
+							MarkdownDescription: "You can sort list ascending using **asc** or descending using **desc**. The order of the values matters as the first entry will be prioritized",
+							Optional:            true,
 						},
 					},
 				},

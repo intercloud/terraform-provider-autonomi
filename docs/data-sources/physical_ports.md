@@ -34,7 +34,7 @@ data "autonomi_physical_ports" "ports" {
 ### Optional
 
 - `filters` (Attributes List) List of filters: [id, name, location, bandwidth, priceMrc, priceNrc].
-Operators avaiable are [=, IN] (see [below for nested schema](#nestedatt--filters))
+Operators avaiable are **=** and **IN** (see [below for nested schema](#nestedatt--filters))
 - `ports` (Attributes List) The **ports** attribute contains the list of physical ports available on the accountId.
 Each port represents a physical-port that matches the specified search criteria. (see [below for nested schema](#nestedatt--ports))
 
@@ -43,9 +43,9 @@ Each port represents a physical-port that matches the specified search criteria.
 
 Optional:
 
-- `name` (String)
-- `operator` (String)
-- `values` (List of String)
+- `name` (String) Name of the filter among **id**, **name**, **location**, **bandwidth**, **priceMrc**, **priceNrc**
+- `operator` (String) Comparison operators. You can use the following list: **=**, **IN**. **IN** will return any products which have the values you passed.
+- `values` (List of String) Values of the filter
 
 
 <a id="nestedatt--ports"></a>

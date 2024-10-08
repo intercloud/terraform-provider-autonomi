@@ -57,9 +57,9 @@ If no hit is returned, an error will be returned (see [below for nested schema](
 
 Optional:
 
-- `name` (String)
-- `operator` (String)
-- `values` (List of String)
+- `name` (String) Name of the filter among **location**, **bandwidth**, **provider**, **duration**
+- `operator` (String) Comparison operators. You can use the following list: **=**, **!=**, **>**, **>=**, **<**, **<=**, **IN**, **TO**. **IN** will return any products which have the values you passed when **TO** will return any value contained between the two (and only two) values you passed.
+- `values` (List of String) Values of the filter
 
 
 <a id="nestedatt--facet_distribution"></a>
